@@ -4,6 +4,7 @@ import { BEIKA_LOCATIONS } from '../data/mapData';
 import { MapPin, Navigation, MessageCircle, X } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
+import { GAME_IMAGES } from '../assets/images';
 
 interface CityMapModalProps {
   onSelectLocation: (locId: string) => void;
@@ -17,13 +18,11 @@ export const CityMapModal: React.FC<CityMapModalProps> = ({
   isPixelBWMode = true,
 }) => {
   const [selectedLoc, setSelectedLoc] = useState<MapLocation>(BEIKA_LOCATIONS[0]);
-
-  const mapImage = '/src/assets/images/beika_city_map_1792666678247.jpg';
+  const mapImage = GAME_IMAGES.cityMap || '/assets/images/beika_city_map_1792666678247.jpg';
 
   const handlePinClick = (loc: MapLocation) => {
     setSelectedLoc(loc);
     conanAudio.playClueFound();
-
     if (loc.id === 'LOC_MORI_AGENCY') {
       conanVoice.speak('KOGORO_NORMAL', loc.dialoguePreview);
     } else if (loc.id === 'LOC_POLICE_HQ') {
@@ -49,7 +48,6 @@ export const CityMapModal: React.FC<CityMapModalProps> = ({
               <p className="text-[10px] sm:text-xs text-slate-400">Di chuyển nhanh giữa các cứ điểm</p>
             </div>
           </div>
-
           <button
             onClick={onClose}
             className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
@@ -66,6 +64,12 @@ export const CityMapModal: React.FC<CityMapModalProps> = ({
               src={mapImage}
               alt="Bản đồ thành phố Beika Tokyo"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== '/assets/images/beika_city_map_1792666678247.jpg') {
+                  target.src = '/assets/images/beika_city_map_1792666678247.jpg';
+                }
+              }}
               className={`w-full h-full object-cover select-none ${
                 isPixelBWMode ? 'pixel-monochrome pixelated contrast-200 brightness-110' : ''
               }`}

@@ -3,6 +3,7 @@ import { Hotspot, EvidenceItem, CaseData } from '../types';
 import { Search, Sparkles, CheckCircle2, AlertTriangle, Key, Timer, MapPin, Clock } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
+import { getCrimeSceneImage } from '../assets/images';
 
 interface CrimeSceneViewProps {
   currentCase: CaseData;
@@ -26,7 +27,7 @@ export const CrimeSceneView: React.FC<CrimeSceneViewProps> = ({
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
   const [isInspecting, setIsInspecting] = useState<boolean>(false);
 
-  const crimeSceneImage = currentCase.crimeSceneImage || '/src/assets/images/crime_scene_mansion_1792666677757.jpg';
+  const crimeSceneImage = getCrimeSceneImage(currentCase.id, currentCase.crimeSceneImage);
 
   const handleHotspotClick = (hotspot: Hotspot) => {
     setSelectedHotspot(hotspot);
@@ -153,6 +154,13 @@ export const CrimeSceneView: React.FC<CrimeSceneViewProps> = ({
           src={crimeSceneImage}
           alt={`Hiện trường ${currentCase.title}`}
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            const target = e.currentTarget;
+            const fallback = currentCase.crimeSceneImage?.replace('/src/assets/', '/assets/') || '/assets/images/crime_scene_mansion_1792666677757.jpg';
+            if (target.src !== fallback) {
+              target.src = fallback;
+            }
+          }}
           className={`w-full h-full object-cover transition-all duration-700 select-none ${
             isPixelBWMode ? 'pixel-monochrome pixelated contrast-200 brightness-110' : ''
           } ${

@@ -3,6 +3,7 @@ import { CaseData, DifficultyLevel } from '../types';
 import { Play, Shield, Compass, BookOpen, Volume2, Sparkles, Music, Flame, Zap } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
+import { GAME_IMAGES } from '../assets/images';
 
 interface TitleScreenProps {
   cases: CaseData[];
@@ -31,7 +32,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
   onUpdateCustomCount,
   onOpenCustomizerModal,
 }) => {
-  const heroImage = '/src/assets/images/conan_deduction_hero_1792666677871.jpg';
+  const heroImage = GAME_IMAGES.hero || '/assets/images/conan_deduction_hero_1792666677871.jpg';
   const selectedCaseCustomCount = customEvidenceCounts[selectedCase.id] ?? selectedCase.evidence.length;
 
   const handleStart = () => {
@@ -52,6 +53,12 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
           src={heroImage}
           alt="Edogawa Conan Thám Tử Lừng Danh"
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (target.src !== '/assets/images/conan_deduction_hero_1792666677871.jpg') {
+              target.src = '/assets/images/conan_deduction_hero_1792666677871.jpg';
+            }
+          }}
           className={`w-full h-full object-cover object-center ${
             isPixelBWMode ? 'pixel-monochrome pixelated opacity-50 contrast-200' : 'opacity-40 mix-blend-screen'
           }`}

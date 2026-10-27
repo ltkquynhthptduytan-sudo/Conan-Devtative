@@ -3,6 +3,7 @@ import { Suspect, EvidenceItem, DifficultyLevel } from '../types';
 import { Volume2, AlertTriangle, ShieldCheck, ArrowLeft, Send, Sparkles } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
+import { GAME_IMAGES } from '../assets/images';
 
 interface InterrogationRoomProps {
   suspect: Suspect;
@@ -25,13 +26,14 @@ export const InterrogationRoom: React.FC<InterrogationRoomProps> = ({
   const [presentedEvidenceId, setPresentedEvidenceId] = useState<string>('');
   const [dialogueHistory, setDialogueHistory] = useState<{ speaker: string; text: string; isConan?: boolean }[]>([]);
   const [isBrokenDown, setIsBrokenDown] = useState<boolean>(false);
+
   const initialNervousness = difficulty === 'HARD' 
     ? (suspect.hardNervousnessLevel ?? Math.max(18, suspect.nervousnessLevel - 25))
     : suspect.nervousnessLevel;
   const [nervousness, setNervousness] = useState<number>(initialNervousness);
   const [isSpeakingActive, setIsSpeakingActive] = useState<boolean>(false);
 
-  const interrogationImage = '/src/assets/images/suspects_interrogation_1792666678276.jpg';
+  const interrogationImage = GAME_IMAGES.interrogation || '/assets/images/suspects_interrogation_1792666678276.jpg';
 
   // Listen to voice engine speaking state
   useEffect(() => {
@@ -157,6 +159,12 @@ export const InterrogationRoom: React.FC<InterrogationRoomProps> = ({
             src={interrogationImage}
             alt="Phòng thẩm vấn nghi phạm Anime Conan"
             referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src !== '/assets/images/suspects_interrogation_1792666678276.jpg') {
+                target.src = '/assets/images/suspects_interrogation_1792666678276.jpg';
+              }
+            }}
             className={`absolute inset-0 w-full h-full object-cover ${
               isPixelBWMode ? 'pixel-monochrome pixelated contrast-200 brightness-110 opacity-90' : 'opacity-90'
             }`}
