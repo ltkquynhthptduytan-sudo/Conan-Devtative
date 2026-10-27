@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@layer utilities {
+  /* Pixel art rendering rules */
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
+  }
+
+  /* Black and White monochrome pixel art filter */
+  .pixel-bw-filter {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    filter: grayscale(100%) contrast(240%) brightness(95%);
+  }
+
+  /* High contrast 1-bit monochrome retro effect */
+  .pixel-monochrome {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    filter: grayscale(100%) contrast(300%) brightness(85%);
+  }
+
+  /* Pixel dithering pattern overlay */
+  .pixel-grid-pattern {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0);
+    background-size: 3px 3px;
+  }
+
+  /* Pixel scanlines */
+  .pixel-scanlines {
+    background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%, 
+      rgba(0, 0, 0, 0.4) 50%
+    );
+    background-size: 100% 4px;
+  }
+
+  /* Retro pixel box shadow border */
+  .pixel-box-bw {
+    border: 3px solid #ffffff;
+    box-shadow: 
+      inset 0 0 0 2px #000000,
+      0 0 0 2px #000000,
+      4px 4px 0 0 #ffffff,
+      6px 6px 0 0 #000000;
+  }
+}
+
+/* Custom scrollbars and retro fonts styling */
+body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background-color: #030712;
+  color: #f3f4f6;
+}
+
+/* Pixel dithering keyframe animations */
+@keyframes pixel-flicker {
+  0% { opacity: 0.97; }
+  50% { opacity: 1; }
+  100% { opacity: 0.98; }
+}
+
+.animate-pixel-flicker {
+  animation: pixel-flicker 0.15s infinite;
+}

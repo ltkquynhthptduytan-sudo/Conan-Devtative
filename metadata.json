@@ -1,0 +1,6 @@
+{
+  "name": "Thám Tử Conan - Hồ Sơ Án Mạng Beika",
+  "description": "Game phiêu lưu suy luận phá án 2D tương tác sâu: khám nghiệm hiện trường, thẩm vấn nghi can, giải đố thời gian thực và lồng tiếng giọng nói phong cách Conan Movie.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
