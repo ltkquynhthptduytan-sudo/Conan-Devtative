@@ -13,6 +13,9 @@ interface TitleScreenProps {
   difficulty: DifficultyLevel;
   onSelectDifficulty: (diff: DifficultyLevel) => void;
   isPixelBWMode?: boolean;
+  customEvidenceCounts: Record<string, number>;
+  onUpdateCustomCount: (caseId: string, count: number) => void;
+  onOpenCustomizerModal: () => void;
 }
 
 export const TitleScreen: React.FC<TitleScreenProps> = ({
@@ -24,15 +27,19 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
   difficulty,
   onSelectDifficulty,
   isPixelBWMode = true,
+  customEvidenceCounts,
+  onUpdateCustomCount,
+  onOpenCustomizerModal,
 }) => {
   const heroImage = '/src/assets/images/conan_deduction_hero_1792666677871.jpg';
+  const selectedCaseCustomCount = customEvidenceCounts[selectedCase.id] ?? selectedCase.evidence.length;
 
   const handleStart = () => {
     conanAudio.playEpiphany();
     conanAudio.playBgm('THEME');
     const introMsg = difficulty === 'EASY'
-      ? 'Chế độ Tập Sự: Các vật chứng cốt lõi đã sẵn sàng! Chân tướng sự thật chỉ có một!'
-      : 'Chế độ Thám Tử Kudo: Nghi can rất ngoan cố và bằng chứng rất phức tạp! Hãy cẩn trọng từng lập luận!';
+      ? `Chế độ Tập Sự (${selectedCaseCustomCount} vật chứng)! Chân tướng sự thật chỉ có một!`
+      : `Chế độ Thám Tử Kudo (${selectedCaseCustomCount} vật chứng)! Hãy cẩn trọng từng lập luận!`;
     conanVoice.speak('CONAN', introMsg);
     onStartGame();
   };
@@ -200,6 +207,67 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
                 • 40s giải đố mật mã gấp gáp.
               </p>
             </button>
+          </div>
+        </div>
+
+        {/* Section 3: Evidence Count Customizer */}
+        <div className="w-full max-w-3xl text-left space-y-2 mb-6 sm:mb-8 bg-slate-900/80 p-3.5 sm:p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+          <div className="flex items-center justify-between text-xs font-mono text-slate-400 uppercase tracking-wider">
+            <span>3. Tùy Chỉnh Số Lượng Vật Chứng Cho Vụ Án:</span>
+            <span className="text-red-400 font-bold font-mono text-xs">
+              {selectedCaseCustomCount} / {selectedCase.evidence.length} Vật chứng
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-950/80 border border-slate-800 rounded-xl">
+            <div className="text-xs text-slate-300">
+              <span className="font-bold text-white">{selectedCase.title}</span>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Thay đổi số lượng manh mối xuất hiện ở hiện trường (từ 2 đến {selectedCase.evidence.length} vật chứng).
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+              <button
+                onClick={() => onUpdateCustomCount(selectedCase.id, Math.min(3, selectedCase.evidence.length))}
+                className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
+                  selectedCaseCustomCount === Math.min(3, selectedCase.evidence.length)
+                    ? 'bg-emerald-950 border-emerald-500 text-emerald-400'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                3 Nhanh
+              </button>
+
+              <button
+                onClick={() => onUpdateCustomCount(selectedCase.id, Math.min(5, selectedCase.evidence.length))}
+                className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
+                  selectedCaseCustomCount === Math.min(5, selectedCase.evidence.length)
+                    ? 'bg-amber-950 border-amber-500 text-amber-400'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                5 Vừa
+              </button>
+
+              <button
+                onClick={() => onUpdateCustomCount(selectedCase.id, selectedCase.evidence.length)}
+                className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
+                  selectedCaseCustomCount === selectedCase.evidence.length
+                    ? 'bg-red-950 border-red-500 text-red-400'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                Tối đa ({selectedCase.evidence.length})
+              </button>
+
+              <button
+                onClick={onOpenCustomizerModal}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-md"
+              >
+                Tùy chỉnh chi tiết...
+              </button>
+            </div>
           </div>
         </div>
 

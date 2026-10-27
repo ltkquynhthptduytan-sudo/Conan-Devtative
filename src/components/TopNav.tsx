@@ -11,6 +11,7 @@ interface TopNavProps {
   totalEvidence: number;
   onOpenDeduction: () => void;
   onOpenMusicManager: () => void;
+  onOpenCustomizerModal?: () => void;
   canDeduce: boolean;
   isPixelBWMode?: boolean;
   onTogglePixelBWMode?: () => void;
@@ -23,6 +24,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   totalEvidence,
   onOpenDeduction,
   onOpenMusicManager,
+  onOpenCustomizerModal,
   canDeduce,
   isPixelBWMode = true,
   onTogglePixelBWMode,
@@ -145,6 +147,16 @@ export const TopNav: React.FC<TopNavProps> = ({
               }`}
             >
               <span>🎮 <span className="hidden sm:inline">{isPixelBWMode ? 'Pixel Trắng Đen' : 'Pixel Màu'}</span><span className="sm:hidden">{isPixelBWMode ? 'T&Đ' : 'Màu'}</span></span>
+            </button>
+          )}
+
+          {onOpenCustomizerModal && (
+            <button
+              onClick={onOpenCustomizerModal}
+              title="Tùy chỉnh số lượng vật chứng vụ án"
+              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-800 text-red-400 hover:text-white hover:bg-slate-700 transition-colors text-[11px] sm:text-xs font-semibold cursor-pointer border border-slate-700"
+            >
+              <span>⚙️ {totalEvidence} VC</span>
             </button>
           )}
 

@@ -10,6 +10,7 @@ import { InterrogationRoom } from './components/InterrogationRoom';
 import { CityMapModal } from './components/CityMapModal';
 import { RealTimePuzzleModal } from './components/RealTimePuzzleModal';
 import { DeductionClimaxModal } from './components/DeductionClimaxModal';
+import { EvidenceCustomizerModal } from './components/EvidenceCustomizerModal';
 import { GadgetToolbar } from './components/GadgetToolbar';
 import { ConanSoundtrackPlayer } from './components/ConanSoundtrackPlayer';
 import { MusicManagerModal } from './components/MusicManagerModal';
@@ -24,6 +25,10 @@ export default function App() {
   const [cases, setCases] = useState<CaseData[]>(CASES_LIST);
   const [activeInterrogationSuspectId, setActiveInterrogationSuspectId] = useState<string>('SUSPECT_TATSUMI');
   
+  // Custom evidence counts per case state
+  const [customEvidenceCounts, setCustomEvidenceCounts] = useState<Record<string, number>>({});
+  const [isEvidenceCustomizerOpen, setIsEvidenceCustomizerOpen] = useState<boolean>(false);
+
   // Modals & Gadget toggles
   const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
   const [isPuzzleOpen, setIsPuzzleOpen] = useState<boolean>(false);
@@ -33,7 +38,43 @@ export default function App() {
   const [activeGlassesMode, setActiveGlassesMode] = useState<boolean>(false);
   const [isPixelBWMode, setIsPixelBWMode] = useState<boolean>(true);
 
-  const activeCase = cases[currentCaseIndex];
+  const rawActiveCase = cases[currentCaseIndex];
+
+  // Dynamically derive active case with customized evidence count
+  const activeCase = React.useMemo(() => {
+    const customLimit = customEvidenceCounts[rawActiveCase.id] ?? rawActiveCase.evidence.length;
+    if (customLimit >= rawActiveCase.evidence.length) {
+      return rawActiveCase;
+    }
+    // Key evidence items prioritized first
+    const sortedEv = [...rawActiveCase.evidence].sort((a, b) => (b.isKeyEvidence ? 1 : 0) - (a.isKeyEvidence ? 1 : 0));
+    const activeEv = sortedEv.slice(0, customLimit);
+    const activeEvIds = new Set(activeEv.map(e => e.id));
+
+    const filteredHotspots = rawActiveCase.hotspots.map(h => {
+      if (h.evidenceIdGranted && !activeEvIds.has(h.evidenceIdGranted)) {
+        return {
+          ...h,
+          description: `${h.description} [Chế độ tùy chỉnh: Vị trí này không có vật chứng trong số ${customLimit} vật chứng đã chọn]`,
+          evidenceIdGranted: undefined,
+        };
+      }
+      return h;
+    });
+
+    return {
+      ...rawActiveCase,
+      evidence: activeEv,
+      hotspots: filteredHotspots,
+    };
+  }, [rawActiveCase, customEvidenceCounts]);
+
+  const handleUpdateCustomCount = (caseId: string, newCount: number) => {
+    setCustomEvidenceCounts(prev => ({
+      ...prev,
+      [caseId]: newCount,
+    }));
+  };
 
   // Collect evidence handler
   const handleCollectEvidence = (evidenceId: string) => {
@@ -116,6 +157,7 @@ export default function App() {
         totalEvidence={activeCase.evidence.length}
         onOpenDeduction={() => setIsDeductionOpen(true)}
         onOpenMusicManager={() => setIsMusicManagerOpen(true)}
+        onOpenCustomizerModal={() => setIsEvidenceCustomizerOpen(true)}
         canDeduce={canDeduce}
         isPixelBWMode={isPixelBWMode}
         onTogglePixelBWMode={() => setIsPixelBWMode(prev => !prev)}
@@ -136,6 +178,9 @@ export default function App() {
             difficulty={difficulty}
             onSelectDifficulty={setDifficulty}
             isPixelBWMode={isPixelBWMode}
+            customEvidenceCounts={customEvidenceCounts}
+            onUpdateCustomCount={handleUpdateCustomCount}
+            onOpenCustomizerModal={() => setIsEvidenceCustomizerOpen(true)}
           />
         )}
 
@@ -285,6 +330,16 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Evidence Customizer Modal */}
+      <EvidenceCustomizerModal
+        isOpen={isEvidenceCustomizerOpen}
+        onClose={() => setIsEvidenceCustomizerOpen(false)}
+        selectedCase={rawActiveCase}
+        customCount={customEvidenceCounts[rawActiveCase.id] ?? rawActiveCase.evidence.length}
+        onUpdateCustomCount={handleUpdateCustomCount}
+        isPixelBWMode={isPixelBWMode}
+      />
     </div>
   );
 }
