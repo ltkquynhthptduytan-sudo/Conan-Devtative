@@ -110,6 +110,8 @@ export interface CaseData {
     hint: string;
     hardHint?: string;
     penaltySeconds: number;
+    evidenceIdGranted?: string;
+    rewardText?: string;
   };
   hotspots: Hotspot[];
   evidence: EvidenceItem[];

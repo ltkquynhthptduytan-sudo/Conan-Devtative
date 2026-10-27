@@ -19,8 +19,10 @@ export const CASES_LIST: CaseData[] = [
       timeLimitSeconds: 60,
       type: 'CIPHER',
       solution: '2015',
-      hint: 'Nhìn vào thời điểm đồng hồ trên bàn nạn nhân dừng lại và 4 cánh hoa trên huy hiệu!',
+      hint: 'Bác Tachibana trúng độc vào lúc 20:15 và chiếc đồng hồ trên bàn làm việc đã dừng lại đúng lúc đó!',
       penaltySeconds: 5,
+      evidenceIdGranted: 'EVD_HIDDEN_SAFE_DOCS',
+      rewardText: 'MẬT MÃ CHÍNH XÁC: 2015! Két sắt đã bật mở! Thu được Hợp đồng biển thủ 500 triệu Yên của Tatsumi!',
     },
     hotspots: [
       {
@@ -373,6 +375,8 @@ export const CASES_LIST: CaseData[] = [
       solution: 'BLUE',
       hint: '"Bầu trời mùa hạ" = Màu xanh lam (Blue). Tuyệt đối không chạm vào dây đỏ mang màu anh đào!',
       penaltySeconds: 10,
+      evidenceIdGranted: 'EVD_BOMB_CIRCUIT',
+      rewardText: 'ĐÃ THÁO NGÒI NỔ THÀNH CÔNG! Dây xanh lam đã ngắt nguồn điện! Thu được Sơ đồ ngòi nổ kép Tháp Tokyo!',
     },
     hotspots: [
       {
@@ -535,8 +539,10 @@ export const CASES_LIST: CaseData[] = [
       hardTimeLimitSeconds: 40,
       type: 'CIPHER',
       solution: '1432',
-      hint: 'Mỗi loài cây đại diện cho 1 con số: Mai=1, Tùng=2, Cúc=3, Trúc=4. Thứ tự: Xuân -> Hạ -> Thu -> Đông!',
+      hint: 'Mỗi loài cây đại diện cho 1 con số: Mai=1, Tùng=2, Cúc=3, Trúc=4. Thứ tự: Xuân (Mai=1) -> Hạ (Trúc=4) -> Thu (Cúc=3) -> Đông (Tùng=2) => 1432!',
       penaltySeconds: 5,
+      evidenceIdGranted: 'EVD_REMOTE_FUSE',
+      rewardText: 'MẬT MÃ CHÍNH XÁC: 1432! Cơ quan bệ trà thất đã ngừng lại! Thu được Mạch kích nổ cầu chì điều khiển hồng ngoại!',
     },
     hotspots: [
       {

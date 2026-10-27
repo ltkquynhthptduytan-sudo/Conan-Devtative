@@ -14,6 +14,7 @@ import { EvidenceCustomizerModal } from './components/EvidenceCustomizerModal';
 import { GadgetToolbar } from './components/GadgetToolbar';
 import { ConanSoundtrackPlayer } from './components/ConanSoundtrackPlayer';
 import { MusicManagerModal } from './components/MusicManagerModal';
+import { HintModal } from './components/HintModal';
 import { conanAudio } from './audio/conanSoundEngine';
 import { conanVoice } from './audio/voiceEngine';
 import { Trophy, ArrowRight, RotateCcw } from 'lucide-react';
@@ -28,6 +29,11 @@ export default function App() {
   // Custom evidence counts per case state
   const [customEvidenceCounts, setCustomEvidenceCounts] = useState<Record<string, number>>({});
   const [isEvidenceCustomizerOpen, setIsEvidenceCustomizerOpen] = useState<boolean>(false);
+
+  // Hint System (3 hints max per case)
+  const [hintsRemaining, setHintsRemaining] = useState<number>(3);
+  const [revealedHintLevels, setRevealedHintLevels] = useState<number>(0);
+  const [isHintModalOpen, setIsHintModalOpen] = useState<boolean>(false);
 
   // Modals & Gadget toggles
   const [isMapOpen, setIsMapOpen] = useState<boolean>(false);
@@ -118,7 +124,17 @@ export default function App() {
   // Puzzle success
   const handlePuzzleSuccess = () => {
     setIsPuzzleOpen(false);
-    handleCollectEvidence('EVD_HIDDEN_SAFE_DOCS');
+    const evGranted = activeCase.realTimePuzzle?.evidenceIdGranted || 
+      (activeCase.id === 'CASE_01_LOCKED_ROOM' ? 'EVD_HIDDEN_SAFE_DOCS' : 
+       activeCase.id === 'CASE_02_CLOCK_TOWER' ? 'EVD_BOMB_CIRCUIT' : 'EVD_REMOTE_FUSE');
+    handleCollectEvidence(evGranted);
+  };
+
+  // Hint handler
+  const handleUseHint = () => {
+    if (hintsRemaining <= 0) return;
+    setHintsRemaining(prev => Math.max(0, prev - 1));
+    setRevealedHintLevels(prev => Math.min(3, prev + 1));
   };
 
   // Case solved handler
@@ -126,11 +142,13 @@ export default function App() {
     setIsDeductionOpen(false);
     setIsCaseSolvedModal(true);
     conanAudio.playEpiphany();
-    conanVoice.speak('CONAN', 'Chúc mừng bạn! Vụ án căn phòng khóa kín tại khách sạn Beika đã được phá giải hoàn hảo!');
+    conanVoice.speak('CONAN', 'Chúc mừng bạn! Vụ án đã được phá giải hoàn hảo!');
   };
 
   const handleNextCase = () => {
     setIsCaseSolvedModal(false);
+    setHintsRemaining(3);
+    setRevealedHintLevels(0);
     if (currentCaseIndex < cases.length - 1) {
       setCurrentCaseIndex(prev => prev + 1);
       setCurrentScreen('CRIME_SCENE');
@@ -155,9 +173,11 @@ export default function App() {
         }}
         evidenceCount={collectedEvidenceCount}
         totalEvidence={activeCase.evidence.length}
+        hintsRemaining={hintsRemaining}
         onOpenDeduction={() => setIsDeductionOpen(true)}
         onOpenMusicManager={() => setIsMusicManagerOpen(true)}
         onOpenCustomizerModal={() => setIsEvidenceCustomizerOpen(true)}
+        onOpenHintModal={() => setIsHintModalOpen(true)}
         canDeduce={canDeduce}
         isPixelBWMode={isPixelBWMode}
         onTogglePixelBWMode={() => setIsPixelBWMode(prev => !prev)}
@@ -171,7 +191,11 @@ export default function App() {
             selectedCase={activeCase}
             onSelectCase={(c) => {
               const idx = cases.findIndex(item => item.id === c.id);
-              if (idx !== -1) setCurrentCaseIndex(idx);
+              if (idx !== -1) {
+                setCurrentCaseIndex(idx);
+                setHintsRemaining(3);
+                setRevealedHintLevels(0);
+              }
             }}
             onStartGame={() => setCurrentScreen('CRIME_SCENE')}
             onOpenMusicManager={() => setIsMusicManagerOpen(true)}
@@ -234,6 +258,8 @@ export default function App() {
             setActiveGlassesMode(!activeGlassesMode);
           }}
           onUseStunDart={() => setIsDeductionOpen(true)}
+          hintsRemaining={hintsRemaining}
+          onOpenHintModal={() => setIsHintModalOpen(true)}
         />
       )}
 
@@ -338,6 +364,17 @@ export default function App() {
         selectedCase={rawActiveCase}
         customCount={customEvidenceCounts[rawActiveCase.id] ?? rawActiveCase.evidence.length}
         onUpdateCustomCount={handleUpdateCustomCount}
+        isPixelBWMode={isPixelBWMode}
+      />
+
+      {/* Hint Modal */}
+      <HintModal
+        isOpen={isHintModalOpen}
+        onClose={() => setIsHintModalOpen(false)}
+        currentCase={activeCase}
+        hintsRemaining={hintsRemaining}
+        revealedHintLevels={revealedHintLevels}
+        onUseHint={handleUseHint}
         isPixelBWMode={isPixelBWMode}
       />
     </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameScreen } from '../types';
-import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Mic, MicOff, Music, Home } from 'lucide-react';
+import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Mic, MicOff, Music, Home, Lightbulb } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
 
@@ -9,9 +9,11 @@ interface TopNavProps {
   setScreen: (screen: GameScreen) => void;
   evidenceCount: number;
   totalEvidence: number;
+  hintsRemaining?: number;
   onOpenDeduction: () => void;
   onOpenMusicManager: () => void;
   onOpenCustomizerModal?: () => void;
+  onOpenHintModal?: () => void;
   canDeduce: boolean;
   isPixelBWMode?: boolean;
   onTogglePixelBWMode?: () => void;
@@ -22,9 +24,11 @@ export const TopNav: React.FC<TopNavProps> = ({
   setScreen,
   evidenceCount,
   totalEvidence,
+  hintsRemaining = 3,
   onOpenDeduction,
   onOpenMusicManager,
   onOpenCustomizerModal,
+  onOpenHintModal,
   canDeduce,
   isPixelBWMode = true,
   onTogglePixelBWMode,
@@ -136,6 +140,20 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Zone 3: Primary action & sound controls */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {onOpenHintModal && (
+            <button
+              onClick={onOpenHintModal}
+              title="Gợi ý từ Conan & Tiến sĩ Agasa (Tối đa 3 lượt)"
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                hintsRemaining > 0
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30 active:scale-95'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 opacity-80'
+              }`}
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
+              <span>Gợi Ý ({hintsRemaining}/3)</span>
+            </button>
+          )}
           {onTogglePixelBWMode && (
             <button
               onClick={onTogglePixelBWMode}

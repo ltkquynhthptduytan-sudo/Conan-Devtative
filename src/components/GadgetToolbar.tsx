@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GadgetType } from '../types';
-import { Disc, Watch, Eye, Zap, Radio, X, Volume2 } from 'lucide-react';
+import { Disc, Watch, Eye, Zap, Radio, X, Volume2, Lightbulb } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
 
@@ -8,12 +8,16 @@ interface GadgetToolbarProps {
   activeGlassesMode: boolean;
   onToggleGlasses: () => void;
   onUseStunDart?: () => void;
+  hintsRemaining?: number;
+  onOpenHintModal?: () => void;
 }
 
 export const GadgetToolbar: React.FC<GadgetToolbarProps> = ({
   activeGlassesMode,
   onToggleGlasses,
   onUseStunDart,
+  hintsRemaining = 3,
+  onOpenHintModal,
 }) => {
   const [activeModal, setActiveModal] = useState<GadgetType | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<'KOGORO' | 'MEGURE' | 'SHINICHI' | 'CONAN'>('KOGORO');
@@ -53,6 +57,22 @@ export const GadgetToolbar: React.FC<GadgetToolbarProps> = ({
     <>
       {/* Floating Bottom Gadget Dock (Positioned above mobile bottom nav bar) */}
       <aside aria-label="Hộp bảo bối thám tử" className="fixed bottom-16 lg:bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl max-w-[95vw] overflow-x-auto scrollbar-none">
+        {/* Hint button */}
+        {onOpenHintModal && (
+          <button
+            onClick={onOpenHintModal}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all active:scale-95 border shrink-0 cursor-pointer ${
+              hintsRemaining > 0
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                : 'bg-slate-800 text-slate-400 border-slate-700 opacity-80'
+            }`}
+            title="Gợi ý từ Conan & Tiến sĩ Agasa (Tối đa 3 lượt)"
+          >
+            <Lightbulb className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span>Gợi Ý ({hintsRemaining}/3)</span>
+          </button>
+        )}
+
         {/* Voice Bowtie */}
         <button
           onClick={() => handleOpenGadget('BOWTIE')}
