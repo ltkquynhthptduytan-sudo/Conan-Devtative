@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Hotspot, EvidenceItem, CaseData } from '../types';
-import { Search, Sparkles, CheckCircle2, AlertTriangle, Key, Timer, MapPin, Clock } from 'lucide-react';
+import { Search, Sparkles, CheckCircle2, AlertTriangle, Key, Timer, MapPin, Clock, Layers } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
 import { getCrimeSceneImage } from '../assets/images';
@@ -26,8 +26,21 @@ export const CrimeSceneView: React.FC<CrimeSceneViewProps> = ({
 }) => {
   const [selectedHotspot, setSelectedHotspot] = useState<Hotspot | null>(null);
   const [isInspecting, setIsInspecting] = useState<boolean>(false);
+  const [activeSceneIndex, setActiveSceneIndex] = useState<number>(0);
 
-  const crimeSceneImage = getCrimeSceneImage(currentCase.id, currentCase.crimeSceneImage);
+  const defaultImage = currentCase.crimeSceneImage;
+
+  const subScenes = currentCase.subScenes || [
+    { id: 'SCENE_MAIN', name: 'Góc 1: Hiện Trường Chính', image: defaultImage, description: 'Hiện trường chính nơi xảy ra vụ án' },
+    { id: 'SCENE_SUB_1', name: 'Góc 2: Ban Công / Mái Che', image: defaultImage, description: 'Khu vực phụ 1 khảo sát xung quanh' },
+    { id: 'SCENE_SUB_2', name: 'Góc 3: Khu Vực Mật', image: defaultImage, description: 'Khu vực phụ 2 nơi giấu manh mối kín' },
+  ];
+
+  const activeSubScene = subScenes[activeSceneIndex] || subScenes[0];
+  const crimeSceneImage = activeSubScene.image || defaultImage;
+
+  // Filter hotspots belonging to the active sub-scene
+  const activeHotspots = hotspots.filter(h => (h.sceneIndex ?? 0) === activeSceneIndex);
 
   const handleHotspotClick = (hotspot: Hotspot) => {
     setSelectedHotspot(hotspot);
@@ -147,6 +160,33 @@ export const CrimeSceneView: React.FC<CrimeSceneViewProps> = ({
         </div>
       </div>
 
+      {/* Sub-Scene Switcher Tabs (3 Cảnh cho mỗi hiện trường) */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 bg-slate-900/80 p-2 sm:p-2.5 border border-slate-800 rounded-xl backdrop-blur-md">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none w-full sm:w-auto">
+          {subScenes.map((sub, idx) => (
+            <button
+              key={sub.id}
+              onClick={() => {
+                setActiveSceneIndex(idx);
+                conanAudio.playClueFound();
+              }}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeSceneIndex === idx
+                  ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-950/40 font-mono'
+                  : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+              }`}
+            >
+              <Layers className={`w-3.5 h-3.5 ${activeSceneIndex === idx ? 'text-amber-300' : 'text-slate-500'}`} />
+              <span>{sub.name}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400 font-mono italic">
+          <span>📍 {activeSubScene.description}</span>
+        </div>
+      </div>
+
       {/* Main Crime Scene Interactive Canvas */}
       <div className="relative flex-1 w-full rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-black min-h-[300px] sm:min-h-[440px] md:min-h-[520px] aspect-[4/3] sm:aspect-video md:aspect-auto select-none">
         {/* Crime scene background image */}
@@ -156,9 +196,11 @@ export const CrimeSceneView: React.FC<CrimeSceneViewProps> = ({
           referrerPolicy="no-referrer"
           onError={(e) => {
             const target = e.currentTarget;
-            const fallback = currentCase.crimeSceneImage?.replace('/src/assets/', '/assets/') || '/assets/images/crime_scene_mansion_1792666677757.jpg';
-            if (target.src !== fallback) {
-              target.src = fallback;
+            if (!target.dataset.fallbackTried) {
+              target.dataset.fallbackTried = 'true';
+              if (typeof currentCase.crimeSceneImage === 'string' && currentCase.crimeSceneImage) {
+                target.src = currentCase.crimeSceneImage;
+              }
             }
           }}
           className={`w-full h-full object-cover transition-all duration-700 select-none ${
@@ -191,8 +233,8 @@ export const CrimeSceneView: React.FC<CrimeSceneViewProps> = ({
           </div>
         )}
 
-        {/* Hotspot Markers (Touch Target: Min 44px x 44px) */}
-        {hotspots.map((hotspot) => {
+        {/* Hotspot Markers for Active Sub-Scene */}
+        {activeHotspots.map((hotspot) => {
           const isCollected = hotspot.evidenceIdGranted
             ? evidenceList.find(e => e.id === hotspot.evidenceIdGranted)?.collected
             : false;

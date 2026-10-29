@@ -1,6 +1,7 @@
 import React from 'react';
 import { CaseData, DifficultyLevel } from '../types';
-import { Play, Shield, Compass, BookOpen, Volume2, Sparkles, Music, Flame, Zap } from 'lucide-react';
+import { DetectiveCharacter, DETECTIVE_CHARACTERS } from '../data/charactersData';
+import { Play, Shield, Compass, BookOpen, Volume2, Sparkles, Music, Flame, Zap, UserCheck } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
 import { GAME_IMAGES } from '../assets/images';
@@ -8,6 +9,8 @@ import { GAME_IMAGES } from '../assets/images';
 interface TitleScreenProps {
   cases: CaseData[];
   selectedCase: CaseData;
+  selectedCharacter?: DetectiveCharacter;
+  onOpenCharacterSelectModal?: () => void;
   onSelectCase: (c: CaseData) => void;
   onStartGame: () => void;
   onOpenMusicManager: () => void;
@@ -22,6 +25,8 @@ interface TitleScreenProps {
 export const TitleScreen: React.FC<TitleScreenProps> = ({
   cases,
   selectedCase,
+  selectedCharacter = DETECTIVE_CHARACTERS[0],
+  onOpenCharacterSelectModal,
   onSelectCase,
   onStartGame,
   onOpenMusicManager,
@@ -156,6 +161,51 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Character Selection Banner */}
+        <div className="w-full max-w-3xl text-left space-y-2 mb-4 bg-slate-900/80 p-3.5 sm:p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+          <div className="flex items-center justify-between text-xs font-mono text-slate-400 uppercase tracking-wider">
+            <span>2. Nhân Vật Phá Án Đang Chọn:</span>
+            {onOpenCharacterSelectModal && (
+              <button
+                onClick={onOpenCharacterSelectModal}
+                className="text-red-400 hover:text-red-300 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Đổi Nhân Vật ({selectedCharacter.name})...</span>
+              </button>
+            )}
+          </div>
+
+          <div
+            onClick={onOpenCharacterSelectModal}
+            className="flex items-center gap-3.5 p-3 bg-slate-950/80 border border-slate-800 hover:border-red-500/50 rounded-xl cursor-pointer transition-all active:scale-[0.99] group"
+          >
+            <div className={`w-12 h-12 rounded-xl border-2 ${selectedCharacter.borderColor} overflow-hidden bg-slate-900 shrink-0 flex items-center justify-center font-bold text-xs text-slate-300 shadow-md`}>
+              <img
+                src={selectedCharacter.avatarUrl}
+                alt={selectedCharacter.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${selectedCharacter.avatarSeed}`;
+                }}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-red-400 transition-colors truncate">
+                  {selectedCharacter.name}
+                </h4>
+                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full shrink-0 ${selectedCharacter.badgeBg}`}>
+                  {selectedCharacter.title}
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-300 font-semibold mt-0.5 line-clamp-1">
+                ⚡ {selectedCharacter.bonusTitle}: {selectedCharacter.bonusDesc}
+              </p>
+            </div>
           </div>
         </div>
 

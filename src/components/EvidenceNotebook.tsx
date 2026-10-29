@@ -205,14 +205,33 @@ export const EvidenceNotebook: React.FC<EvidenceNotebookProps> = ({
                     <h2 className="text-lg font-black text-white">{selectedEvidence.title}</h2>
                   </div>
                 </div>
-                {selectedEvidence.isKeyEvidence && (
-                  <span className="px-3 py-1 bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold rounded-lg">
-                    Vật Chứng Trọng Tâm
-                  </span>
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {selectedEvidence.isKeyEvidence && (
+                    <span className="px-3 py-1 bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold rounded-lg">
+                      Vật Chứng Trọng Tâm
+                    </span>
+                  )}
+                  {selectedEvidence.isDistractor && (
+                    <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 text-xs font-bold rounded-lg">
+                      ⚠️ Vật Chứng Gây Nhiễu
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4 text-xs">
+                {selectedEvidence.isDistractor && (
+                  <div className="p-3.5 bg-yellow-950/30 border border-yellow-500/40 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2 text-yellow-400 font-bold text-xs uppercase tracking-wider">
+                      <AlertCircle className="w-4 h-4 text-yellow-400 shrink-0" />
+                      <span>CẢNH BÁO: VẬT CHỨNG GÂY NHIỄU (RED HERRING)</span>
+                    </div>
+                    <p className="text-xs text-yellow-200/90 leading-relaxed">
+                      {selectedEvidence.distractorExplanation || 'Đây là chứng cứ gây nhiễu nhằm đánh lừa điều tra. Đừng để nó che mắt khỏi chân tướng vụ án!'}
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <div className="text-slate-400 mb-1">Vị trí thu thập:</div>
                   <div className="p-3 bg-slate-950 rounded-xl text-slate-200 border border-slate-800 font-mono">

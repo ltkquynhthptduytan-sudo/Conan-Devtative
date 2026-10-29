@@ -18,6 +18,35 @@ export type GadgetType =
   | 'SNEAKERS' 
   | 'BADGE';
 
+export type ShopItemTier = 'LOW' | 'MEDIUM' | 'HIGH' | 'LEGENDARY';
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  iconName: string;
+  tier: ShopItemTier;
+  bonusType: 'BOMB_TIME' | 'PUZZLE_TIME' | 'HINT_BONUS' | 'FREEZE_TIMER' | 'FORENSIC_BOOST';
+  bonusValue: number;
+  bonusDescription: string;
+  compatibleCharacterId?: string;
+}
+
+export interface ForensicSample {
+  id: string;
+  evidenceId: string;
+  sampleName: string;
+  sampleType: 'FINGERPRINT' | 'DNA' | 'CHEMICAL' | 'BLOOD';
+  discoveredLocation: string;
+  analyzed: boolean;
+  analysisReport?: string;
+  matchedSuspectId?: string;
+  matchedSuspectName?: string;
+}
+
+export type EquippedItemsMap = Record<string, string[]>; // characterId -> itemIds
+
 export interface EvidenceItem {
   id: string;
   title: string;
@@ -26,6 +55,8 @@ export interface EvidenceItem {
   detailedAnalysis: string;
   discoveredLocation: string;
   isKeyEvidence: boolean;
+  isDistractor?: boolean; // Vật chứng gây nhiễu
+  distractorExplanation?: string; // Conan giải thích vì sao là vật chứng nhiễu
   contradictsSuspectId?: string;
   contradictionReason?: string;
   iconName: string;
@@ -70,6 +101,7 @@ export interface Hotspot {
   y: number; // percentage 0-100
   title: string;
   description: string;
+  sceneIndex?: number; // 0: Main Scene, 1: Sub-Scene 2, 2: Sub-Scene 3
   requiresGadget?: 'GLASSES' | 'MAGNIFIER';
   evidenceIdGranted?: string;
   isDiscovered: boolean;
@@ -88,6 +120,13 @@ export interface MapLocation {
   isUnlocked: boolean;
 }
 
+export interface SubScene {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+}
+
 export interface CaseData {
   id: string;
   caseNumber: number;
@@ -96,6 +135,7 @@ export interface CaseData {
   timeOfDeath: string;
   crimeLocation: string;
   crimeSceneImage: string;
+  subScenes?: SubScene[]; // 2 cảnh góc phụ bổ sung cho hiện trường
   synopsis: string;
   lockedRoomTrick: string;
   decisiveEvidenceId: string;

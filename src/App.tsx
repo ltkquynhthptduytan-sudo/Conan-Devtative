@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { GameScreen, CaseData, DifficultyLevel } from './types';
+import { GameScreen, CaseData, DifficultyLevel, ShopItem } from './types';
 import { CASES_LIST } from './data/casesData';
+import { DETECTIVE_CHARACTERS, DetectiveCharacter } from './data/charactersData';
+import { SHOP_ITEMS } from './data/shopData';
+import { CharacterSelectModal } from './components/CharacterSelectModal';
+import { DetectiveShopModal } from './components/DetectiveShopModal';
+import { ForensicsLabModal } from './components/ForensicsLabModal';
 import { TopNav } from './components/TopNav';
 import { TitleScreen } from './components/TitleScreen';
 import { CrimeSceneView } from './components/CrimeSceneView';
@@ -22,7 +27,108 @@ import { Trophy, ArrowRight, RotateCcw } from 'lucide-react';
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<GameScreen>('TITLE');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('EASY');
+  const [selectedCharacter, setSelectedCharacter] = useState<DetectiveCharacter>(DETECTIVE_CHARACTERS[0]);
+  const [isCharacterSelectModalOpen, setIsCharacterSelectModalOpen] = useState<boolean>(false);
   const [currentCaseIndex, setCurrentCaseIndex] = useState<number>(0);
+  // Conan Coins & Character Unlocks state (localStorage persisted)
+  const [conanCoins, setConanCoins] = useState<number>(() => {
+    const saved = localStorage.getItem('conan_coins');
+    return saved !== null ? parseInt(saved, 10) : 200;
+  });
+
+  const [unlockedCharacterIds, setUnlockedCharacterIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('unlocked_characters');
+    return saved ? JSON.parse(saved) : ['CHAR_CONAN'];
+  });
+
+  const handleUnlockCharacter = (char: DetectiveCharacter) => {
+    if (conanCoins >= char.price && !unlockedCharacterIds.includes(char.id)) {
+      const newCoins = conanCoins - char.price;
+      const newUnlocked = [...unlockedCharacterIds, char.id];
+      setConanCoins(newCoins);
+      setUnlockedCharacterIds(newUnlocked);
+      localStorage.setItem('conan_coins', newCoins.toString());
+      localStorage.setItem('unlocked_characters', JSON.stringify(newUnlocked));
+      setSelectedCharacter(char);
+      conanAudio.playEpiphany();
+      conanVoice.speak('CONAN', `Đã mở khóa nhân vật ${char.name}!`);
+    }
+  };
+
+  // Detective Shop & Forensics Lab State
+  const [purchasedItemIds, setPurchasedItemIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('purchased_items');
+    return saved ? JSON.parse(saved) : ['ITEM_WIRE_CUTTER_BASIC'];
+  });
+
+  const [equippedItemsMap, setEquippedItemsMap] = useState<Record<string, string[]>>(() => {
+    const saved = localStorage.getItem('equipped_items_map');
+    return saved ? JSON.parse(saved) : { CHAR_CONAN: ['ITEM_WIRE_CUTTER_BASIC'] };
+  });
+
+  const [analyzedSampleIds, setAnalyzedSampleIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('analyzed_samples');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [isShopModalOpen, setIsShopModalOpen] = useState<boolean>(false);
+  const [isForensicsLabOpen, setIsForensicsLabOpen] = useState<boolean>(false);
+
+  const handleBuyItem = (item: ShopItem) => {
+    if (conanCoins >= item.price && !purchasedItemIds.includes(item.id)) {
+      const newCoins = conanCoins - item.price;
+      const newPurchased = [...purchasedItemIds, item.id];
+      setConanCoins(newCoins);
+      setPurchasedItemIds(newPurchased);
+      localStorage.setItem('conan_coins', newCoins.toString());
+      localStorage.setItem('purchased_items', JSON.stringify(newPurchased));
+
+      // Auto equip to selected character
+      handleEquipItem(selectedCharacter.id, item.id);
+    }
+  };
+
+  const handleEquipItem = (characterId: string, itemId: string) => {
+    setEquippedItemsMap(prev => {
+      const current = prev[characterId] || [];
+      if (!current.includes(itemId)) {
+        const next = { ...prev, [characterId]: [...current, itemId] };
+        localStorage.setItem('equipped_items_map', JSON.stringify(next));
+        return next;
+      }
+      return prev;
+    });
+  };
+
+  const handleUnequipItem = (characterId: string, itemId: string) => {
+    setEquippedItemsMap(prev => {
+      const current = prev[characterId] || [];
+      const next = { ...prev, [characterId]: current.filter(id => id !== itemId) };
+      localStorage.setItem('equipped_items_map', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleAnalyzeSample = (evidenceId: string) => {
+    if (!analyzedSampleIds.includes(evidenceId)) {
+      const next = [...analyzedSampleIds, evidenceId];
+      setAnalyzedSampleIds(next);
+      localStorage.setItem('analyzed_samples', JSON.stringify(next));
+    }
+  };
+
+  // Calculate equipped bonus time for current character
+  const equippedItemsBonusTime = React.useMemo(() => {
+    const charItemIds = equippedItemsMap[selectedCharacter.id] || [];
+    return charItemIds.reduce((sum, itemId) => {
+      const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
+      if (shopItem && shopItem.bonusType === 'BOMB_TIME') {
+        return sum + shopItem.bonusValue;
+      }
+      return sum;
+    }, 0);
+  }, [equippedItemsMap, selectedCharacter.id]);
+
   const [cases, setCases] = useState<CaseData[]>(CASES_LIST);
   const [activeInterrogationSuspectId, setActiveInterrogationSuspectId] = useState<string>('SUSPECT_TATSUMI');
   
@@ -141,6 +247,14 @@ export default function App() {
   const handleCaseSolved = () => {
     setIsDeductionOpen(false);
     setIsCaseSolvedModal(true);
+
+    // Award +100 Conan coins on case completion
+    setConanCoins(prev => {
+      const nextCoins = prev + 100;
+      localStorage.setItem('conan_coins', nextCoins.toString());
+      return nextCoins;
+    });
+
     conanAudio.playEpiphany();
     conanVoice.speak('CONAN', 'Chúc mừng bạn! Vụ án đã được phá giải hoàn hảo!');
   };
@@ -174,6 +288,11 @@ export default function App() {
         evidenceCount={collectedEvidenceCount}
         totalEvidence={activeCase.evidence.length}
         hintsRemaining={hintsRemaining}
+        selectedCharacter={selectedCharacter}
+        conanCoins={conanCoins}
+        onOpenCharacterSelectModal={() => setIsCharacterSelectModalOpen(true)}
+        onOpenShopModal={() => setIsShopModalOpen(true)}
+        onOpenForensicsLab={() => setIsForensicsLabOpen(true)}
         onOpenDeduction={() => setIsDeductionOpen(true)}
         onOpenMusicManager={() => setIsMusicManagerOpen(true)}
         onOpenCustomizerModal={() => setIsEvidenceCustomizerOpen(true)}
@@ -189,6 +308,8 @@ export default function App() {
           <TitleScreen
             cases={cases}
             selectedCase={activeCase}
+            selectedCharacter={selectedCharacter}
+            onOpenCharacterSelectModal={() => setIsCharacterSelectModalOpen(true)}
             onSelectCase={(c) => {
               const idx = cases.findIndex(item => item.id === c.id);
               if (idx !== -1) {
@@ -274,6 +395,21 @@ export default function App() {
         onClose={() => setIsMusicManagerOpen(false)}
       />
 
+      {/* Detective Character Selection Modal */}
+      {isCharacterSelectModalOpen && (
+        <CharacterSelectModal
+          selectedCharacter={selectedCharacter}
+          conanCoins={conanCoins}
+          unlockedCharacterIds={unlockedCharacterIds}
+          onUnlockCharacter={handleUnlockCharacter}
+          onSelectCharacter={(char) => {
+            setSelectedCharacter(char);
+            setIsCharacterSelectModalOpen(false);
+          }}
+          onClose={() => setIsCharacterSelectModalOpen(false)}
+        />
+      )}
+
       {/* City Map Modal */}
       {isMapOpen && (
         <CityMapModal
@@ -288,10 +424,35 @@ export default function App() {
         <RealTimePuzzleModal
           puzzleData={activeCase.realTimePuzzle}
           difficulty={difficulty}
+          selectedCharacter={selectedCharacter}
+          equippedItemsBonusTime={equippedItemsBonusTime}
           onSuccess={handlePuzzleSuccess}
           onClose={() => setIsPuzzleOpen(false)}
         />
       )}
+
+      {/* Detective Shop Modal */}
+      <DetectiveShopModal
+        isOpen={isShopModalOpen}
+        onClose={() => setIsShopModalOpen(false)}
+        conanCoins={conanCoins}
+        purchasedItemIds={purchasedItemIds}
+        equippedItemsMap={equippedItemsMap}
+        selectedCharacter={selectedCharacter}
+        onBuyItem={handleBuyItem}
+        onEquipItem={handleEquipItem}
+        onUnequipItem={handleUnequipItem}
+      />
+
+      {/* Forensics Lab Modal */}
+      <ForensicsLabModal
+        isOpen={isForensicsLabOpen}
+        onClose={() => setIsForensicsLabOpen(false)}
+        evidenceList={activeCase.evidence}
+        suspects={activeCase.suspects}
+        analyzedSampleIds={analyzedSampleIds}
+        onAnalyzeSample={handleAnalyzeSample}
+      />
 
       {/* Deduction Climax Modal */}
       {isDeductionOpen && (
@@ -317,6 +478,10 @@ export default function App() {
               <h2 className="text-2xl font-black text-white">
                 XUẤT SẮC! BẠN LÀ THÁM TỬ LỪNG DANH!
               </h2>
+
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-400/50 rounded-full text-amber-300 font-bold text-sm shadow-md animate-pulse">
+                <span>🪙 THƯỞNG HOÀN THÀNH: +100 XU CONAN!</span>
+              </div>
               <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
                 {activeCase.caseNumber === 1 && 'Tatsumi Ryuichi đã bị áp giải về Sở Cảnh sát Tokyo. Toàn bộ mánh khóe căn phòng khóa kín bằng sợi cước và khối đá lạnh đã được vạch trần trước sự thán phục của Thanh tra Megure và chú Mori!'}
                 {activeCase.caseNumber === 2 && 'Quả bom hẹn giờ tại Tháp Tokyo đã được tháo ngòi thành công. Bài thơ Haiku bí mật và kẻ đánh bom đã hoàn toàn quy phục trước trí tuệ của Conan!'}

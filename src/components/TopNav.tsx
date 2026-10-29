@@ -1,8 +1,11 @@
 import React from 'react';
 import { GameScreen } from '../types';
-import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Mic, MicOff, Music, Home, Lightbulb } from 'lucide-react';
+import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Mic, MicOff, Music, Home, Lightbulb, ShoppingBag, FlaskConical } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
+
+import { DetectiveCharacter } from '../data/charactersData';
+import { UserCheck } from 'lucide-react';
 
 interface TopNavProps {
   currentScreen: GameScreen;
@@ -10,6 +13,11 @@ interface TopNavProps {
   evidenceCount: number;
   totalEvidence: number;
   hintsRemaining?: number;
+  conanCoins?: number;
+  selectedCharacter?: DetectiveCharacter;
+  onOpenCharacterSelectModal?: () => void;
+  onOpenShopModal?: () => void;
+  onOpenForensicsLab?: () => void;
   onOpenDeduction: () => void;
   onOpenMusicManager: () => void;
   onOpenCustomizerModal?: () => void;
@@ -25,6 +33,11 @@ export const TopNav: React.FC<TopNavProps> = ({
   evidenceCount,
   totalEvidence,
   hintsRemaining = 3,
+  conanCoins = 200,
+  selectedCharacter,
+  onOpenCharacterSelectModal,
+  onOpenShopModal,
+  onOpenForensicsLab,
   onOpenDeduction,
   onOpenMusicManager,
   onOpenCustomizerModal,
@@ -140,6 +153,42 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Zone 3: Primary action & sound controls */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {onOpenCharacterSelectModal && (
+            <button
+              onClick={onOpenCharacterSelectModal}
+              title="Cửa hàng & Chọn Nhân Vật Phá Án"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-all text-[11px] sm:text-xs font-bold border border-slate-700 cursor-pointer shrink-0"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-red-400 shrink-0" />
+              <span className="hidden sm:inline">{selectedCharacter?.name || 'Đổi Nhân Vật'}</span>
+              <span className="px-1.5 py-0.5 bg-amber-950 text-amber-300 border border-amber-500/40 rounded text-[10px] font-mono">
+                🪙 {conanCoins}
+              </span>
+            </button>
+          )}
+
+          {onOpenShopModal && (
+            <button
+              onClick={onOpenShopModal}
+              title="Cửa Hàng Bảo Bối & Trang Bị Vật Phẩm Thám Tử"
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900/90 text-amber-300 border border-amber-500/50 transition-all text-[11px] sm:text-xs font-bold cursor-pointer shrink-0 active:scale-95"
+            >
+              <ShoppingBag className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">Cửa Hàng</span>
+            </button>
+          )}
+
+          {onOpenForensicsLab && (
+            <button
+              onClick={onOpenForensicsLab}
+              title="Phòng Giám Định Pháp Y ADN & Vân Tay Tiến Sĩ Agasa"
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-purple-950/80 hover:bg-purple-900/90 text-purple-300 border border-purple-500/50 transition-all text-[11px] sm:text-xs font-bold cursor-pointer shrink-0 active:scale-95"
+            >
+              <FlaskConical className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <span className="hidden sm:inline">Pháp Y ADN</span>
+            </button>
+          )}
+
           {onOpenHintModal && (
             <button
               onClick={onOpenHintModal}
