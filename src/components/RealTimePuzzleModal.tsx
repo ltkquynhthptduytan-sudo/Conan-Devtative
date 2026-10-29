@@ -258,14 +258,24 @@ export const RealTimePuzzleModal: React.FC<RealTimePuzzleModalProps> = ({
             </div>
           </div>
 
-          {/* Countdown Display */}
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-mono font-bold text-sm ${
-            timeLeft <= 15 || isExploded
-              ? 'bg-red-600/30 text-red-400 border-red-500 animate-pulse'
-              : 'bg-slate-950 text-amber-400 border-slate-800'
-          }`}>
-            <Timer className="w-4 h-4" />
-            <span>00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}</span>
+          {/* Countdown Display & Close X button */}
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-mono font-bold text-sm ${
+              timeLeft <= 15 || isExploded
+                ? 'bg-red-600/30 text-red-400 border-red-500 animate-pulse'
+                : 'bg-slate-950 text-amber-400 border-slate-800'
+            }`}>
+              <Timer className="w-4 h-4" />
+              <span>00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}</span>
+            </div>
+
+            <button
+              onClick={onClose}
+              title="Đóng bảng giải mật mã (Nút X)"
+              className="p-2 bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white rounded-xl transition-all cursor-pointer border border-slate-700 active:scale-95"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GadgetType } from '../types';
-import { Disc, Watch, Eye, Zap, Radio, X, Volume2, Lightbulb } from 'lucide-react';
+import { Disc, Watch, Eye, Zap, Radio, X, Volume2, Lightbulb, FlaskConical } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
 
@@ -10,6 +10,9 @@ interface GadgetToolbarProps {
   onUseStunDart?: () => void;
   hintsRemaining?: number;
   onOpenHintModal?: () => void;
+  isTransformedToKudo?: boolean;
+  aptxTimeLeft?: number;
+  onUseAptxAntidote?: () => void;
 }
 
 export const GadgetToolbar: React.FC<GadgetToolbarProps> = ({
@@ -18,6 +21,9 @@ export const GadgetToolbar: React.FC<GadgetToolbarProps> = ({
   onUseStunDart,
   hintsRemaining = 3,
   onOpenHintModal,
+  isTransformedToKudo = false,
+  aptxTimeLeft = 0,
+  onUseAptxAntidote,
 }) => {
   const [activeModal, setActiveModal] = useState<GadgetType | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<'KOGORO' | 'MEGURE' | 'SHINICHI' | 'CONAN'>('KOGORO');
@@ -70,6 +76,26 @@ export const GadgetToolbar: React.FC<GadgetToolbarProps> = ({
           >
             <Lightbulb className="w-4 h-4 text-amber-400 animate-pulse" />
             <span>Gợi Ý ({hintsRemaining}/3)</span>
+          </button>
+        )}
+
+        {/* APTX 4869 Antidote Transformation Drug */}
+        {onUseAptxAntidote && (
+          <button
+            onClick={onUseAptxAntidote}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all active:scale-95 border shrink-0 cursor-pointer ${
+              isTransformedToKudo
+                ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-500/40 animate-pulse'
+                : 'bg-purple-600/20 text-purple-300 border-purple-500/40 hover:bg-purple-600/30'
+            }`}
+            title="Thuốc giải độc APTX-4869 tạm thời (Biến Conan thành Kudo Shinichi trong 1m20s)"
+          >
+            <FlaskConical className="w-4 h-4 text-purple-400" />
+            <span>
+              {isTransformedToKudo
+                ? `Kudo: ${Math.floor(aptxTimeLeft / 60)}:${String(aptxTimeLeft % 60).padStart(2, '0')}`
+                : 'Thuốc APTX (1m20s)'}
+            </span>
           </button>
         )}
 

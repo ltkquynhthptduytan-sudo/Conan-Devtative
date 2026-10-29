@@ -117,9 +117,44 @@ export default function App() {
     }
   };
 
+  // APTX-4869 Transformation State (80s = 1 min 20s)
+  const [aptxTimeLeft, setAptxTimeLeft] = useState<number>(0);
+  const isTransformedToKudo = aptxTimeLeft > 0;
+
+  React.useEffect(() => {
+    if (aptxTimeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setAptxTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          conanAudio.playDramaticShock();
+          conanVoice.speak('CONAN', 'Hết thời gian hiệu lực của thuốc giải APTX! Vóc dáng đã trở lại thành Conan!');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [aptxTimeLeft]);
+
+  const handleUseAptxAntidote = () => {
+    setAptxTimeLeft(80); // 80 seconds = 1m20s
+    conanAudio.playEpiphany();
+    conanVoice.speak('SHINICHI', 'Cơ thể nóng bừng lên rồi! Thuốc giải APTX-4869 đã phát huy tác dụng! Ta đã trở lại thành Kudo Shinichi!');
+  };
+
+  // Active playing character (If transformed via APTX, switch Conan -> Kudo Shinichi)
+  const activePlayingCharacter = React.useMemo(() => {
+    if (isTransformedToKudo && selectedCharacter.id === 'CHAR_CONAN') {
+      const shinichiChar = DETECTIVE_CHARACTERS.find(c => c.id === 'CHAR_SHINICHI');
+      return shinichiChar || selectedCharacter;
+    }
+    return selectedCharacter;
+  }, [isTransformedToKudo, selectedCharacter]);
+
   // Calculate equipped bonus time for current character
   const equippedItemsBonusTime = React.useMemo(() => {
-    const charItemIds = equippedItemsMap[selectedCharacter.id] || [];
+    const charItemIds = equippedItemsMap[activePlayingCharacter.id] || [];
     return charItemIds.reduce((sum, itemId) => {
       const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
       if (shopItem && shopItem.bonusType === 'BOMB_TIME') {
@@ -127,7 +162,7 @@ export default function App() {
       }
       return sum;
     }, 0);
-  }, [equippedItemsMap, selectedCharacter.id]);
+  }, [equippedItemsMap, activePlayingCharacter.id]);
 
   const [cases, setCases] = useState<CaseData[]>(CASES_LIST);
   const [activeInterrogationSuspectId, setActiveInterrogationSuspectId] = useState<string>('SUSPECT_TATSUMI');
@@ -148,7 +183,7 @@ export default function App() {
   const [isMusicManagerOpen, setIsMusicManagerOpen] = useState<boolean>(false);
   const [isCaseSolvedModal, setIsCaseSolvedModal] = useState<boolean>(false);
   const [activeGlassesMode, setActiveGlassesMode] = useState<boolean>(false);
-  const [isPixelBWMode, setIsPixelBWMode] = useState<boolean>(true);
+  const [isPixelBWMode, setIsPixelBWMode] = useState<boolean>(false);
 
   const rawActiveCase = cases[currentCaseIndex];
 
@@ -288,7 +323,7 @@ export default function App() {
         evidenceCount={collectedEvidenceCount}
         totalEvidence={activeCase.evidence.length}
         hintsRemaining={hintsRemaining}
-        selectedCharacter={selectedCharacter}
+        selectedCharacter={activePlayingCharacter}
         conanCoins={conanCoins}
         onOpenCharacterSelectModal={() => setIsCharacterSelectModalOpen(true)}
         onOpenShopModal={() => setIsShopModalOpen(true)}
@@ -299,7 +334,6 @@ export default function App() {
         onOpenHintModal={() => setIsHintModalOpen(true)}
         canDeduce={canDeduce}
         isPixelBWMode={isPixelBWMode}
-        onTogglePixelBWMode={() => setIsPixelBWMode(prev => !prev)}
       />
 
       {/* Main Screen Router */}
@@ -308,7 +342,7 @@ export default function App() {
           <TitleScreen
             cases={cases}
             selectedCase={activeCase}
-            selectedCharacter={selectedCharacter}
+            selectedCharacter={activePlayingCharacter}
             onOpenCharacterSelectModal={() => setIsCharacterSelectModalOpen(true)}
             onSelectCase={(c) => {
               const idx = cases.findIndex(item => item.id === c.id);
@@ -381,6 +415,9 @@ export default function App() {
           onUseStunDart={() => setIsDeductionOpen(true)}
           hintsRemaining={hintsRemaining}
           onOpenHintModal={() => setIsHintModalOpen(true)}
+          isTransformedToKudo={isTransformedToKudo}
+          aptxTimeLeft={aptxTimeLeft}
+          onUseAptxAntidote={handleUseAptxAntidote}
         />
       )}
 
@@ -424,7 +461,7 @@ export default function App() {
         <RealTimePuzzleModal
           puzzleData={activeCase.realTimePuzzle}
           difficulty={difficulty}
-          selectedCharacter={selectedCharacter}
+          selectedCharacter={activePlayingCharacter}
           equippedItemsBonusTime={equippedItemsBonusTime}
           onSuccess={handlePuzzleSuccess}
           onClose={() => setIsPuzzleOpen(false)}

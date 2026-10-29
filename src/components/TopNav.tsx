@@ -203,19 +203,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               <span>Gợi Ý ({hintsRemaining}/3)</span>
             </button>
           )}
-          {onTogglePixelBWMode && (
-            <button
-              onClick={onTogglePixelBWMode}
-              title={isPixelBWMode ? 'Chế độ Pixel Trắng Đen' : 'Chuyển sang Pixel Trắng Đen'}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg border text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
-                isPixelBWMode
-                  ? 'bg-black text-white border-white shadow-md font-mono'
-                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
-              }`}
-            >
-              <span>🎮 <span className="hidden sm:inline">{isPixelBWMode ? 'Pixel Trắng Đen' : 'Pixel Màu'}</span><span className="sm:hidden">{isPixelBWMode ? 'T&Đ' : 'Màu'}</span></span>
-            </button>
-          )}
+
 
           {onOpenCustomizerModal && (
             <button

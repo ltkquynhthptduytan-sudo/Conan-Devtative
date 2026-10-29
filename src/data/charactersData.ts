@@ -54,7 +54,7 @@ export const DETECTIVE_CHARACTERS: DetectiveCharacter[] = [
     badgeBg: 'bg-sky-950/80 text-sky-300',
     borderColor: 'border-sky-400',
     accentColor: 'text-sky-300',
-    price: 300, // 300 Xu Conan
+    price: 10000, // 10,000 Xu Conan
   },
   {
     id: 'CHAR_HEIJI',

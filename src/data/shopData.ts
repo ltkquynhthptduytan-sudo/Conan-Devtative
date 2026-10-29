@@ -128,4 +128,16 @@ export const SHOP_ITEMS: ShopItem[] = [
     bonusDescription: '+2.0s thời gian gỡ bom & Giảm 50% thời gian phạt khi cắt sai',
     compatibleCharacterId: 'CHAR_HAIBARA',
   },
+  {
+    id: 'ITEM_APTX_ANTIDOTE',
+    name: 'Thuốc Giải Độc APTX-4869 Tạm Thời',
+    description: 'Viên thuốc do Haibara chế tạo giúp Conan tạm thời khôi phục vóc dáng Kudo Shinichi trong 1 phút 20 giây!',
+    price: 150,
+    iconName: 'FlaskConical',
+    tier: 'LEGENDARY',
+    bonusType: 'FORENSIC_BOOST',
+    bonusValue: 80,
+    bonusDescription: 'Biến Conan thành Kudo Shinichi trong 1 phút 20 giây & tăng kỹ năng suy luận Kudo!',
+    compatibleCharacterId: 'CHAR_CONAN',
+  },
 ];
