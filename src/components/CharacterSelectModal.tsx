@@ -2,7 +2,6 @@ import React from 'react';
 import { DETECTIVE_CHARACTERS, DetectiveCharacter } from '../data/charactersData';
 import { UserCheck, X, Zap, Shield, Sparkles, CheckCircle2, Lock, Coins } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
-import { conanVoice } from '../audio/voiceEngine';
 
 interface CharacterSelectModalProps {
   selectedCharacter: DetectiveCharacter;
@@ -73,7 +72,6 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                   if (isUnlocked) {
                     onSelectCharacter(char);
                     conanAudio.playEpiphany();
-                    conanVoice.speak('CONAN', `Đã chọn nhân vật phá án ${char.name}!`);
                   }
                 }}
                 className={`group relative p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-between active:scale-[0.98] ${
@@ -148,7 +146,6 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                         if (canAfford) {
                           onUnlockCharacter(char, effectivePrice);
                           conanAudio.playEpiphany();
-                          conanVoice.speak('CONAN', `Chúc mừng! Bạn đã mở khóa thành công nhân vật ${char.name}!`);
                         } else {
                           conanAudio.playDramaticShock();
                         }

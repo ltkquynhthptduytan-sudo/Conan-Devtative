@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Suspect, EvidenceItem, DifficultyLevel } from '../types';
 import { Volume2, AlertTriangle, ShieldCheck, ArrowLeft, Send, Sparkles } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
-import { conanVoice } from '../audio/voiceEngine';
 import { GAME_IMAGES } from '../assets/images';
 
 interface InterrogationRoomProps {
@@ -35,13 +34,7 @@ export const InterrogationRoom: React.FC<InterrogationRoomProps> = ({
 
   const interrogationImage = GAME_IMAGES.interrogation || '/assets/images/suspects_interrogation_1792666678276.jpg';
 
-  // Listen to voice engine speaking state
-  useEffect(() => {
-    const unsub = conanVoice.subscribe((speaking) => {
-      setIsSpeakingActive(speaking);
-    });
-    return unsub;
-  }, []);
+
 
   // Initial greeting
   useEffect(() => {
@@ -52,16 +45,10 @@ export const InterrogationRoom: React.FC<InterrogationRoomProps> = ({
         text: suspect.initialVoiceLine,
       },
     ]);
-    const voiceKey = suspect.id === 'SUSPECT_TATSUMI' ? 'SUSPECT_TATSUMI' : suspect.id === 'SUSPECT_AYANE' ? 'SUSPECT_AYANE' : 'SUSPECT_KENZO';
-    conanVoice.speak(voiceKey, suspect.initialVoiceLine);
   }, [suspect]);
 
   const handleAskQuestion = (questionText: string, conanSpeech: string, answerText: string) => {
     conanAudio.playBowtieDial();
-    conanVoice.speak('CONAN', conanSpeech, () => {
-      const voiceKey = suspect.id === 'SUSPECT_TATSUMI' ? 'SUSPECT_TATSUMI' : suspect.id === 'SUSPECT_AYANE' ? 'SUSPECT_AYANE' : 'SUSPECT_KENZO';
-      conanVoice.speak(voiceKey, answerText);
-    });
 
     setDialogueHistory(prev => [
       ...prev,
@@ -82,14 +69,9 @@ export const InterrogationRoom: React.FC<InterrogationRoomProps> = ({
       conanAudio.playObjectionSlam();
       const conanSpeech = currentStatement.conanVoiceline || `Chân tướng sự thật chỉ có một! ${selectedEvidence.title} đã hoàn toàn bác bỏ lời khai của ông!`;
       
-      conanVoice.speak('CONAN', conanSpeech, () => {
-        // Suspect breakdown
-        setTimeout(() => {
-          conanAudio.playDramaticShock();
-          const voiceKey = suspect.id === 'SUSPECT_TATSUMI' ? 'SUSPECT_TATSUMI' : suspect.id === 'SUSPECT_AYANE' ? 'SUSPECT_AYANE' : 'SUSPECT_KENZO';
-          conanVoice.speak(voiceKey, suspect.breakdownVoiceLine);
-        }, 600);
-      });
+      setTimeout(() => {
+        conanAudio.playDramaticShock();
+      }, 400);
 
       setNervousness(100);
       setIsBrokenDown(true);
@@ -109,7 +91,6 @@ export const InterrogationRoom: React.FC<InterrogationRoomProps> = ({
     } else {
       // FAILED CONTRADICTION
       conanAudio.playDramaticShock();
-      conanVoice.speak('CONAN', 'Khoan đã... Vật chứng này chưa trực tiếp liên quan đến lời khai đó.');
       setDialogueHistory(prev => [
         ...prev,
         { 

@@ -27,7 +27,6 @@ import { ShopItem, CustomItemPrices, UserProfile } from '../types';
 import { SHOP_ITEMS } from '../data/shopData';
 import { DETECTIVE_CHARACTERS } from '../data/charactersData';
 import { conanAudio } from '../audio/conanSoundEngine';
-import { conanVoice } from '../audio/voiceEngine';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -73,7 +72,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [toastMsg, setToastMsg] = useState<string>('');
 
   const [isMuted, setIsMuted] = useState<boolean>(conanAudio.getIsMuted());
-  const [isVoiceOn, setIsVoiceOn] = useState<boolean>(conanVoice.isEnabled());
 
   if (!isOpen) return null;
 
@@ -93,7 +91,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         msg: '✓ XÁC NHẬN MẬT KHẨU ADMIN THÀNH CÔNG! QUYỀN ADMIN ĐÃ ĐƯỢC KÍCH HOẠT!',
       });
       conanAudio.playEpiphany();
-      conanVoice.speak('CONAN', 'Mật khẩu Admin chính xác! Bảng quản trị Admin đã được mở khóa!');
       setAdminPassInput('');
       setActiveTab('SHOP_PRICES');
     } else {
@@ -108,11 +105,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleToggleMute = () => {
     const muted = conanAudio.toggleMute();
     setIsMuted(muted);
-  };
-
-  const handleToggleVoice = () => {
-    const voiceOn = conanVoice.toggleVoice();
-    setIsVoiceOn(voiceOn);
   };
 
   const handleRevokeAdmin = () => {
@@ -274,7 +266,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span>Cài Đặt Âm Thanh & Lồng Tiếng</span>
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <button
                     onClick={handleToggleMute}
                     className={`p-3 rounded-xl border flex items-center justify-between text-xs font-bold transition-all cursor-pointer ${
@@ -288,21 +280,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <span>Âm Nhạc & SFX</span>
                     </div>
                     <span>{isMuted ? 'ĐÃ TẮT' : 'ĐANG BẬT'}</span>
-                  </button>
-
-                  <button
-                    onClick={handleToggleVoice}
-                    className={`p-3 rounded-xl border flex items-center justify-between text-xs font-bold transition-all cursor-pointer ${
-                      !isVoiceOn
-                        ? 'bg-slate-950 border-slate-800 text-slate-500'
-                        : 'bg-slate-900 border-slate-700 text-sky-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isVoiceOn ? <Mic className="w-4 h-4 text-sky-400" /> : <MicOff className="w-4 h-4 text-slate-500" />}
-                      <span>Lồng Tiếng Nhân Vật</span>
-                    </div>
-                    <span>{isVoiceOn ? 'ĐANG BẬT' : 'ĐÃ TẮT'}</span>
                   </button>
                 </div>
               </div>
@@ -651,7 +628,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onClick={() => {
                       onUpdateCoins(999999);
                       conanAudio.playEpiphany();
-                      conanVoice.speak('CONAN', 'Xu Conan đã được nạp tối đa 999,999 Xu!');
                       showToast('Đã nạp 999,999 Xu Conan Đại Phú Gia!');
                     }}
                     className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"

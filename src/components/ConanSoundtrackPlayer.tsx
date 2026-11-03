@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Volume2, VolumeX, Music, Mic, ChevronUp, ChevronDown, Play, Pause } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
-import { conanVoice } from '../audio/voiceEngine';
 
 import { customMusic } from '../audio/customMusicManager';
 
@@ -20,16 +19,7 @@ export const ConanSoundtrackPlayer: React.FC<ConanSoundtrackPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [volume, setVolume] = useState<number>(conanAudio.getVolume());
   const [isMuted, setIsMuted] = useState<boolean>(conanAudio.getIsMuted());
-  const [speakerInfo, setSpeakerInfo] = useState<{ isSpeaking: boolean; speaker: string; text: string }>({
-    isSpeaking: false,
-    speaker: '',
-    text: '',
-  });
-
   useEffect(() => {
-    const unsubVoice = conanVoice.subscribe((isSpeaking, speaker, text) => {
-      setSpeakerInfo({ isSpeaking, speaker, text });
-    });
     const unsubMusic = customMusic.subscribe((state) => {
       setCustomTrackTitle(state.track?.title || null);
       if (state.track) {
@@ -37,7 +27,6 @@ export const ConanSoundtrackPlayer: React.FC<ConanSoundtrackPlayerProps> = ({
       }
     });
     return () => {
-      unsubVoice();
       unsubMusic();
     };
   }, []);

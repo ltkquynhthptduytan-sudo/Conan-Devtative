@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { CaseData } from '../types';
 import { Disc, Watch, Sparkles, CheckCircle, AlertTriangle, ArrowRight, X } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
-import { conanVoice } from '../audio/voiceEngine';
 
 interface DeductionClimaxModalProps {
   currentCase: CaseData;
@@ -24,21 +23,16 @@ export const DeductionClimaxModal: React.FC<DeductionClimaxModalProps> = ({
   // Phase 1: Shoot dart at Mori
   const handleShootMori = () => {
     conanAudio.playStunDart();
-    conanVoice.speak('KOGORO_NORMAL', 'Ủa... Conan, sao gáy chú thấy nhói một cái... Buồn ngủ quá... Oáp...');
     setTimeout(() => {
       setPhase('SLEEPING_MORI');
       conanAudio.playEpiphany();
-    }, 1500);
+    }, 1200);
   };
 
   // Phase 2: Switch to Kogoro voice via Bowtie
   const handleStartSleepingKogoro = () => {
     conanAudio.playBowtieDial();
     conanAudio.playBgm('DEDUCTION');
-    conanVoice.speak(
-      'SLEEPING_KOGORO',
-      'Hừm... Cảnh sát Megure! Mọi người hãy bình tĩnh lại! Vụ án này không hề có hung thủ tàng hình nào cả. Thủ đoạn căn phòng khóa kín và kẻ giết hại ông Tachibana... đã nằm trọn trong tay tôi!'
-    );
     setPhase('QUESTIONS');
   };
 
@@ -52,12 +46,10 @@ export const DeductionClimaxModal: React.FC<DeductionClimaxModalProps> = ({
       conanAudio.playObjectionSlam();
       setIsStepCorrect(true);
       setStepFeedback(option.feedback);
-      conanVoice.speak('SLEEPING_KOGORO', option.feedback);
     } else {
       conanAudio.playDramaticShock();
       setIsStepCorrect(false);
       setStepFeedback(option.feedback);
-      conanVoice.speak('SLEEPING_KOGORO', 'Không đúng! Cần phải suy nghĩ thật cẩn trọng về bằng chứng vật lý!');
     }
   };
 
@@ -71,10 +63,6 @@ export const DeductionClimaxModal: React.FC<DeductionClimaxModalProps> = ({
       // Climax reached!
       setPhase('CULPRIT_REVEAL');
       conanAudio.playDramaticShock();
-      conanVoice.speak(
-        'SLEEPING_KOGORO',
-        'Hung thủ không ai khác chính là anh, thư ký Tatsumi Ryuichi! Chiếc bút máy giấu độc chất trong túi áo anh chính là bằng chứng thép không thể chối cãi! Chân tướng sự thật chỉ có một mà thôi!'
-      );
     }
   };
 

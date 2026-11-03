@@ -24,7 +24,6 @@ import { UserProfileModal } from './components/UserProfileModal';
 import { AdminControlPanelModal } from './components/AdminControlPanelModal';
 import { SettingsModal } from './components/SettingsModal';
 import { conanAudio } from './audio/conanSoundEngine';
-import { conanVoice } from './audio/voiceEngine';
 import { Trophy, ArrowRight, RotateCcw } from 'lucide-react';
 
 export default function App() {
@@ -144,7 +143,6 @@ export default function App() {
       localStorage.setItem('unlocked_characters', JSON.stringify(newUnlocked));
       setSelectedCharacter(char);
       conanAudio.playEpiphany();
-      conanVoice.speak('CONAN', `Đã mở khóa nhân vật ${char.name}!`);
     }
   };
 
@@ -236,7 +234,6 @@ export default function App() {
         if (prev <= 1) {
           clearInterval(timer);
           conanAudio.playDramaticShock();
-          conanVoice.speak('CONAN', 'Hết thời gian hiệu lực của thuốc giải APTX! Vóc dáng đã trở lại thành Conan!');
           return 0;
         }
         return prev - 1;
@@ -248,7 +245,6 @@ export default function App() {
   const handleUseAptxAntidote = () => {
     setAptxTimeLeft(80); // 80 seconds = 1m20s
     conanAudio.playEpiphany();
-    conanVoice.speak('SHINICHI', 'Cơ thể nóng bừng lên rồi! Thuốc giải APTX-4869 đã phát huy tác dụng! Ta đã trở lại thành Kudo Shinichi!');
   };
 
   // Active playing character (If transformed via APTX, switch Conan -> Kudo Shinichi)
@@ -420,7 +416,6 @@ export default function App() {
     });
 
     conanAudio.playEpiphany();
-    conanVoice.speak('CONAN', 'Chúc mừng bạn! Vụ án đã được phá giải hoàn hảo!');
   };
 
   const handleNextCase = () => {

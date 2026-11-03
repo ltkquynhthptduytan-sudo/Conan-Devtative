@@ -20,7 +20,6 @@ import { ShopItem, CustomItemPrices, UserProfile } from '../types';
 import { SHOP_ITEMS } from '../data/shopData';
 import { DETECTIVE_CHARACTERS, DetectiveCharacter } from '../data/charactersData';
 import { conanAudio } from '../audio/conanSoundEngine';
-import { conanVoice } from '../audio/voiceEngine';
 
 interface AdminControlPanelModalProps {
   isOpen: boolean;
@@ -321,7 +320,6 @@ export const AdminControlPanelModal: React.FC<AdminControlPanelModalProps> = ({
                     onClick={() => {
                       onUpdateCoins(999999);
                       conanAudio.playEpiphany();
-                      conanVoice.speak('CONAN', 'Xu Conan đã được nạp tối đa 999,999 Xu!');
                       showToast('Đã nạp 999,999 Xu Conan Đại Phú Gia!');
                     }}
                     className="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"

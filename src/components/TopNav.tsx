@@ -1,8 +1,7 @@
 import React from 'react';
 import { GameScreen, UserProfile } from '../types';
-import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Mic, MicOff, Music, Home, Lightbulb, ShoppingBag, FlaskConical, User, ShieldCheck, Sliders } from 'lucide-react';
+import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Music, Home, Lightbulb, ShoppingBag, FlaskConical, User, ShieldCheck, Sliders } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
-import { conanVoice } from '../audio/voiceEngine';
 
 import { DetectiveCharacter } from '../data/charactersData';
 import { UserCheck } from 'lucide-react';
@@ -55,22 +54,6 @@ export const TopNav: React.FC<TopNavProps> = ({
   onTogglePixelBWMode,
 }) => {
   const [isMuted, setIsMuted] = React.useState(conanAudio.getIsMuted());
-  const [isVoiceOn, setIsVoiceOn] = React.useState(conanVoice.isEnabled());
-
-  const handleToggleAudio = async () => {
-    await conanAudio.resumeContext();
-    const muted = conanAudio.toggleMute();
-    setIsMuted(muted);
-    if (!muted) {
-      conanAudio.playBgm(conanAudio.getCurrentBgm() || 'THEME', true);
-      conanAudio.playEpiphany();
-    }
-  };
-
-  const handleToggleVoice = () => {
-    const voiceOn = conanVoice.toggleVoice();
-    setIsVoiceOn(voiceOn);
-  };
 
   return (
     <>
