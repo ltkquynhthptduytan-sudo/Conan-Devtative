@@ -1,6 +1,6 @@
 import React from 'react';
-import { GameScreen } from '../types';
-import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Mic, MicOff, Music, Home, Lightbulb, ShoppingBag, FlaskConical } from 'lucide-react';
+import { GameScreen, UserProfile } from '../types';
+import { Compass, BookOpen, Users, MapPin, Sparkles, Volume2, VolumeX, Mic, MicOff, Music, Home, Lightbulb, ShoppingBag, FlaskConical, User, ShieldCheck, Sliders } from 'lucide-react';
 import { conanAudio } from '../audio/conanSoundEngine';
 import { conanVoice } from '../audio/voiceEngine';
 
@@ -15,9 +15,13 @@ interface TopNavProps {
   hintsRemaining?: number;
   conanCoins?: number;
   selectedCharacter?: DetectiveCharacter;
+  userProfile?: UserProfile;
   onOpenCharacterSelectModal?: () => void;
   onOpenShopModal?: () => void;
   onOpenForensicsLab?: () => void;
+  onOpenProfileModal?: () => void;
+  onOpenAdminPanel?: () => void;
+  onOpenSettingsModal?: () => void;
   onOpenDeduction: () => void;
   onOpenMusicManager: () => void;
   onOpenCustomizerModal?: () => void;
@@ -35,15 +39,19 @@ export const TopNav: React.FC<TopNavProps> = ({
   hintsRemaining = 3,
   conanCoins = 200,
   selectedCharacter,
+  userProfile,
   onOpenCharacterSelectModal,
   onOpenShopModal,
   onOpenForensicsLab,
+  onOpenProfileModal,
+  onOpenAdminPanel,
+  onOpenSettingsModal,
   onOpenDeduction,
   onOpenMusicManager,
   onOpenCustomizerModal,
   onOpenHintModal,
   canDeduce,
-  isPixelBWMode = true,
+  isPixelBWMode = false,
   onTogglePixelBWMode,
 }) => {
   const [isMuted, setIsMuted] = React.useState(conanAudio.getIsMuted());
@@ -153,6 +161,38 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Zone 3: Primary action & sound controls */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {onOpenSettingsModal && (
+            <button
+              onClick={onOpenSettingsModal}
+              title="Cài Đặt Game & Nhập Mật Khẩu Admin (adminpong)"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition-all text-[11px] sm:text-xs shadow-md cursor-pointer shrink-0 active:scale-95"
+            >
+              <span>⚙️ Cài Đặt</span>
+            </button>
+          )}
+
+          {onOpenProfileModal && (
+            <button
+              onClick={onOpenProfileModal}
+              title="Hồ sơ thám tử"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-all text-[11px] sm:text-xs font-bold border border-slate-700 cursor-pointer shrink-0"
+            >
+              <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">{userProfile?.username || 'Hồ Sơ'}</span>
+            </button>
+          )}
+
+          {userProfile?.isAdmin && onOpenAdminPanel && (
+            <button
+              onClick={onOpenAdminPanel}
+              title="Mở Bảng Điều Khiển Admin (Pong Đẹp Trai)"
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold transition-all text-[11px] sm:text-xs cursor-pointer shrink-0 active:scale-95"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">ADMIN</span>
+            </button>
+          )}
+
           {onOpenCharacterSelectModal && (
             <button
               onClick={onOpenCharacterSelectModal}
@@ -204,41 +244,17 @@ export const TopNav: React.FC<TopNavProps> = ({
             </button>
           )}
 
-
-          {onOpenCustomizerModal && (
+          {/* Music Manager: Restricted strictly to Admin */}
+          {userProfile?.isAdmin && (
             <button
-              onClick={onOpenCustomizerModal}
-              title="Tùy chỉnh số lượng vật chứng vụ án"
-              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-800 text-red-400 hover:text-white hover:bg-slate-700 transition-colors text-[11px] sm:text-xs font-semibold cursor-pointer border border-slate-700"
+              onClick={onOpenMusicManager}
+              title="Chỉnh Nhạc Nền Admin / Tải nhạc MP3"
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-white hover:bg-amber-500/30 transition-colors text-[11px] sm:text-xs font-semibold cursor-pointer shrink-0"
             >
-              <span>⚙️ {totalEvidence} VC</span>
+              <Music className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Chỉnh Nhạc (Admin)</span>
             </button>
           )}
-
-          <button
-            onClick={onOpenMusicManager}
-            title="Đổi nhạc nền / Tải nhạc MP3"
-            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors text-[11px] sm:text-xs font-semibold cursor-pointer"
-          >
-            <Music className="w-3.5 h-3.5 text-red-400" />
-            <span className="hidden sm:inline">Đổi Nhạc</span>
-          </button>
-
-          <button
-            onClick={handleToggleAudio}
-            title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-            className="p-1.5 sm:p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-          </button>
-
-          <button
-            onClick={handleToggleVoice}
-            title={isVoiceOn ? 'Lồng tiếng đang bật' : 'Lồng tiếng đang tắt'}
-            className="p-1.5 sm:p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
-          >
-            {isVoiceOn ? <Mic className="w-4 h-4 text-blue-400" /> : <MicOff className="w-4 h-4 text-slate-500" />}
-          </button>
 
           <button
             onClick={onOpenDeduction}

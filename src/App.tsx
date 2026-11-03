@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GameScreen, CaseData, DifficultyLevel, ShopItem } from './types';
+import { GameScreen, CaseData, DifficultyLevel, ShopItem, UserProfile, CustomItemPrices } from './types';
 import { CASES_LIST } from './data/casesData';
 import { DETECTIVE_CHARACTERS, DetectiveCharacter } from './data/charactersData';
 import { SHOP_ITEMS } from './data/shopData';
@@ -20,6 +20,9 @@ import { GadgetToolbar } from './components/GadgetToolbar';
 import { ConanSoundtrackPlayer } from './components/ConanSoundtrackPlayer';
 import { MusicManagerModal } from './components/MusicManagerModal';
 import { HintModal } from './components/HintModal';
+import { UserProfileModal } from './components/UserProfileModal';
+import { AdminControlPanelModal } from './components/AdminControlPanelModal';
+import { SettingsModal } from './components/SettingsModal';
 import { conanAudio } from './audio/conanSoundEngine';
 import { conanVoice } from './audio/voiceEngine';
 import { Trophy, ArrowRight, RotateCcw } from 'lucide-react';
@@ -30,6 +33,95 @@ export default function App() {
   const [selectedCharacter, setSelectedCharacter] = useState<DetectiveCharacter>(DETECTIVE_CHARACTERS[0]);
   const [isCharacterSelectModalOpen, setIsCharacterSelectModalOpen] = useState<boolean>(false);
   const [currentCaseIndex, setCurrentCaseIndex] = useState<number>(0);
+
+  // Settings Modal State
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+
+  // User Profile Account Data (localStorage persisted)
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('user_account_profile');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fallback default
+      }
+    }
+    return {
+      username: 'Thám Tử Beika',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      rankTitle: 'Thám Tử Tập Sự',
+      casesSolvedCount: 0,
+      totalCoinsEarned: 200,
+      joinedDate: '2026-11-03',
+      isAdmin: false,
+    };
+  });
+
+  const handleUpdateProfile = (updatedPartial: Partial<UserProfile>) => {
+    setUserProfile(prev => {
+      const next = { ...prev, ...updatedPartial };
+      localStorage.setItem('user_account_profile', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Custom Admin Prices & Item Bonus Times state (localStorage persisted)
+  const [customPrices, setCustomPrices] = useState<CustomItemPrices>(() => {
+    const saved = localStorage.getItem('custom_item_prices');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // Fallback default
+      }
+    }
+    return { shopItems: {}, characters: {}, itemBonusValues: {} };
+  });
+
+  const handleUpdateCustomPriceItem = (itemId: string, price: number) => {
+    setCustomPrices(prev => {
+      const next = {
+        ...prev,
+        shopItems: { ...prev.shopItems, [itemId]: price },
+      };
+      localStorage.setItem('custom_item_prices', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleUpdateCustomPriceCharacter = (charId: string, price: number) => {
+    setCustomPrices(prev => {
+      const next = {
+        ...prev,
+        characters: { ...prev.characters, [charId]: price },
+      };
+      localStorage.setItem('custom_item_prices', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleUpdateCustomItemBonusValue = (itemId: string, bonusValue: number) => {
+    setCustomPrices(prev => {
+      const next = {
+        ...prev,
+        itemBonusValues: { ...(prev.itemBonusValues || {}), [itemId]: bonusValue },
+      };
+      localStorage.setItem('custom_item_prices', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleResetToDefaultPrices = () => {
+    const emptyPrices = { shopItems: {}, characters: {}, itemBonusValues: {} };
+    setCustomPrices(emptyPrices);
+    localStorage.setItem('custom_item_prices', JSON.stringify(emptyPrices));
+  };
+
+  // Profile & Admin Control Panel Modals
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+  const [isAdminControlPanelOpen, setIsAdminControlPanelOpen] = useState<boolean>(false);
+
   // Conan Coins & Character Unlocks state (localStorage persisted)
   const [conanCoins, setConanCoins] = useState<number>(() => {
     const saved = localStorage.getItem('conan_coins');
@@ -41,9 +133,10 @@ export default function App() {
     return saved ? JSON.parse(saved) : ['CHAR_CONAN'];
   });
 
-  const handleUnlockCharacter = (char: DetectiveCharacter) => {
-    if (conanCoins >= char.price && !unlockedCharacterIds.includes(char.id)) {
-      const newCoins = conanCoins - char.price;
+  const handleUnlockCharacter = (char: DetectiveCharacter, overridePrice?: number) => {
+    const effectivePrice = overridePrice !== undefined ? overridePrice : (customPrices.characters[char.id] ?? char.price);
+    if (conanCoins >= effectivePrice && !unlockedCharacterIds.includes(char.id)) {
+      const newCoins = conanCoins - effectivePrice;
       const newUnlocked = [...unlockedCharacterIds, char.id];
       setConanCoins(newCoins);
       setUnlockedCharacterIds(newUnlocked);
@@ -53,6 +146,13 @@ export default function App() {
       conanAudio.playEpiphany();
       conanVoice.speak('CONAN', `Đã mở khóa nhân vật ${char.name}!`);
     }
+  };
+
+  const handleUnlockAllCharacters = () => {
+    const allIds = DETECTIVE_CHARACTERS.map(c => c.id);
+    setUnlockedCharacterIds(allIds);
+    localStorage.setItem('unlocked_characters', JSON.stringify(allIds));
+    conanAudio.playEpiphany();
   };
 
   // Detective Shop & Forensics Lab State
@@ -74,9 +174,10 @@ export default function App() {
   const [isShopModalOpen, setIsShopModalOpen] = useState<boolean>(false);
   const [isForensicsLabOpen, setIsForensicsLabOpen] = useState<boolean>(false);
 
-  const handleBuyItem = (item: ShopItem) => {
-    if (conanCoins >= item.price && !purchasedItemIds.includes(item.id)) {
-      const newCoins = conanCoins - item.price;
+  const handleBuyItem = (item: ShopItem, overridePrice?: number) => {
+    const effectivePrice = overridePrice !== undefined ? overridePrice : (customPrices.shopItems[item.id] ?? item.price);
+    if (conanCoins >= effectivePrice && !purchasedItemIds.includes(item.id)) {
+      const newCoins = conanCoins - effectivePrice;
       const newPurchased = [...purchasedItemIds, item.id];
       setConanCoins(newCoins);
       setPurchasedItemIds(newPurchased);
@@ -86,6 +187,13 @@ export default function App() {
       // Auto equip to selected character
       handleEquipItem(selectedCharacter.id, item.id);
     }
+  };
+
+  const handleUnlockAllItems = () => {
+    const allItemIds = SHOP_ITEMS.map(i => i.id);
+    setPurchasedItemIds(allItemIds);
+    localStorage.setItem('purchased_items', JSON.stringify(allItemIds));
+    conanAudio.playEpiphany();
   };
 
   const handleEquipItem = (characterId: string, itemId: string) => {
@@ -152,21 +260,23 @@ export default function App() {
     return selectedCharacter;
   }, [isTransformedToKudo, selectedCharacter]);
 
-  // Calculate equipped bonus time for current character
+  // Calculate equipped bonus time for current character (respecting custom item bonus values)
   const equippedItemsBonusTime = React.useMemo(() => {
     const charItemIds = equippedItemsMap[activePlayingCharacter.id] || [];
     return charItemIds.reduce((sum, itemId) => {
       const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
       if (shopItem && shopItem.bonusType === 'BOMB_TIME') {
-        return sum + shopItem.bonusValue;
+        const customBonus = customPrices.itemBonusValues?.[itemId];
+        const effectiveBonus = customBonus !== undefined ? customBonus : shopItem.bonusValue;
+        return sum + effectiveBonus;
       }
       return sum;
     }, 0);
-  }, [equippedItemsMap, activePlayingCharacter.id]);
+  }, [equippedItemsMap, activePlayingCharacter.id, customPrices.itemBonusValues]);
 
   const [cases, setCases] = useState<CaseData[]>(CASES_LIST);
   const [activeInterrogationSuspectId, setActiveInterrogationSuspectId] = useState<string>('SUSPECT_TATSUMI');
-  
+
   // Custom evidence counts per case state
   const [customEvidenceCounts, setCustomEvidenceCounts] = useState<Record<string, number>>({});
   const [isEvidenceCustomizerOpen, setIsEvidenceCustomizerOpen] = useState<boolean>(false);
@@ -265,8 +375,8 @@ export default function App() {
   // Puzzle success
   const handlePuzzleSuccess = () => {
     setIsPuzzleOpen(false);
-    const evGranted = activeCase.realTimePuzzle?.evidenceIdGranted || 
-      (activeCase.id === 'CASE_01_LOCKED_ROOM' ? 'EVD_HIDDEN_SAFE_DOCS' : 
+    const evGranted = activeCase.realTimePuzzle?.evidenceIdGranted ||
+      (activeCase.id === 'CASE_01_LOCKED_ROOM' ? 'EVD_HIDDEN_SAFE_DOCS' :
        activeCase.id === 'CASE_02_CLOCK_TOWER' ? 'EVD_BOMB_CIRCUIT' : 'EVD_REMOTE_FUSE');
     handleCollectEvidence(evGranted);
   };
@@ -288,6 +398,25 @@ export default function App() {
       const nextCoins = prev + 100;
       localStorage.setItem('conan_coins', nextCoins.toString());
       return nextCoins;
+    });
+
+    // Update user profile stats
+    setUserProfile(prev => {
+      const newSolvedCount = (prev.casesSolvedCount || 0) + 1;
+      const newTotalEarned = (prev.totalCoinsEarned || 0) + 100;
+      let rank = prev.rankTitle;
+      if (newSolvedCount >= 10) rank = 'Đại Thám Tử Lừng Danh';
+      else if (newSolvedCount >= 5) rank = 'Thám Tử Cao Cấp';
+      else if (newSolvedCount >= 2) rank = 'Thám Tử Chính Thức';
+
+      const nextProf = {
+        ...prev,
+        casesSolvedCount: newSolvedCount,
+        totalCoinsEarned: newTotalEarned,
+        rankTitle: rank,
+      };
+      localStorage.setItem('user_account_profile', JSON.stringify(nextProf));
+      return nextProf;
     });
 
     conanAudio.playEpiphany();
@@ -325,6 +454,7 @@ export default function App() {
         hintsRemaining={hintsRemaining}
         selectedCharacter={activePlayingCharacter}
         conanCoins={conanCoins}
+        userProfile={userProfile}
         onOpenCharacterSelectModal={() => setIsCharacterSelectModalOpen(true)}
         onOpenShopModal={() => setIsShopModalOpen(true)}
         onOpenForensicsLab={() => setIsForensicsLabOpen(true)}
@@ -332,6 +462,9 @@ export default function App() {
         onOpenMusicManager={() => setIsMusicManagerOpen(true)}
         onOpenCustomizerModal={() => setIsEvidenceCustomizerOpen(true)}
         onOpenHintModal={() => setIsHintModalOpen(true)}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenAdminPanel={() => setIsAdminControlPanelOpen(true)}
+        onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         canDeduce={canDeduce}
         isPixelBWMode={isPixelBWMode}
       />
@@ -424,6 +557,7 @@ export default function App() {
       {/* Movie 29 Soundtrack & Voice Equalizer Player */}
       <ConanSoundtrackPlayer
         onOpenMusicManager={() => setIsMusicManagerOpen(true)}
+        isAdmin={userProfile.isAdmin}
       />
 
       {/* Custom Music Manager Modal */}
@@ -438,6 +572,7 @@ export default function App() {
           selectedCharacter={selectedCharacter}
           conanCoins={conanCoins}
           unlockedCharacterIds={unlockedCharacterIds}
+          customCharacterPrices={customPrices.characters}
           onUnlockCharacter={handleUnlockCharacter}
           onSelectCharacter={(char) => {
             setSelectedCharacter(char);
@@ -476,6 +611,8 @@ export default function App() {
         purchasedItemIds={purchasedItemIds}
         equippedItemsMap={equippedItemsMap}
         selectedCharacter={selectedCharacter}
+        customItemPrices={customPrices.shopItems}
+        customItemBonusValues={customPrices.itemBonusValues}
         onBuyItem={handleBuyItem}
         onEquipItem={handleEquipItem}
         onUnequipItem={handleUnequipItem}
@@ -499,6 +636,65 @@ export default function App() {
           onClose={() => setIsDeductionOpen(false)}
         />
       )}
+
+      {/* User Account Profile Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        userProfile={userProfile}
+        conanCoins={conanCoins}
+        onUpdateProfile={(updatedPartial) => {
+          handleUpdateProfile({ ...userProfile, ...updatedPartial });
+        }}
+        onOpenAdminPanel={() => {
+          setIsProfileModalOpen(false);
+          setIsAdminControlPanelOpen(true);
+        }}
+      />
+
+      {/* Admin Control Center Modal */}
+      <AdminControlPanelModal
+        isOpen={isAdminControlPanelOpen}
+        onClose={() => setIsAdminControlPanelOpen(false)}
+        conanCoins={conanCoins}
+        customPrices={customPrices}
+        unlockedCharacterIds={unlockedCharacterIds}
+        purchasedItemIds={purchasedItemIds}
+        onUpdateProfile={handleUpdateProfile}
+        onUpdateCoins={(newAmount) => {
+          setConanCoins(newAmount);
+          localStorage.setItem('conan_coins', newAmount.toString());
+        }}
+        onUpdateCustomPriceItem={handleUpdateCustomPriceItem}
+        onUpdateCustomPriceCharacter={handleUpdateCustomPriceCharacter}
+        onUnlockAllCharacters={handleUnlockAllCharacters}
+        onUnlockAllItems={handleUnlockAllItems}
+        onResetToDefaultPrices={handleResetToDefaultPrices}
+        onOpenMusicManager={() => setIsMusicManagerOpen(true)}
+      />
+
+      {/* Game Settings & Admin Passcode Modal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        userProfile={userProfile}
+        conanCoins={conanCoins}
+        customPrices={customPrices}
+        unlockedCharacterIds={unlockedCharacterIds}
+        purchasedItemIds={purchasedItemIds}
+        onUpdateProfile={handleUpdateProfile}
+        onUpdateCoins={(newAmount) => {
+          setConanCoins(newAmount);
+          localStorage.setItem('conan_coins', newAmount.toString());
+        }}
+        onUpdateCustomPriceItem={handleUpdateCustomPriceItem}
+        onUpdateCustomPriceCharacter={handleUpdateCustomPriceCharacter}
+        onUpdateCustomItemBonusValue={handleUpdateCustomItemBonusValue}
+        onUnlockAllCharacters={handleUnlockAllCharacters}
+        onUnlockAllItems={handleUnlockAllItems}
+        onResetToDefaultPrices={handleResetToDefaultPrices}
+        onOpenMusicManager={() => setIsMusicManagerOpen(true)}
+      />
 
       {/* Case Solved Victory Celebration Modal */}
       {isCaseSolvedModal && (
@@ -582,3 +778,4 @@ export default function App() {
     </div>
   );
 }
+

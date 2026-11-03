@@ -7,10 +7,12 @@ import { customMusic } from '../audio/customMusicManager';
 
 interface ConanSoundtrackPlayerProps {
   onOpenMusicManager: () => void;
+  isAdmin?: boolean;
 }
 
 export const ConanSoundtrackPlayer: React.FC<ConanSoundtrackPlayerProps> = ({
   onOpenMusicManager,
+  isAdmin = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [currentBgm, setCurrentBgm] = useState<'THEME' | 'SUSPENSE' | 'DEDUCTION' | null>('THEME');
@@ -56,6 +58,7 @@ export const ConanSoundtrackPlayer: React.FC<ConanSoundtrackPlayerProps> = ({
   };
 
   const handlePlayTrack = async (track: 'THEME' | 'SUSPENSE' | 'DEDUCTION') => {
+    if (!isAdmin) return;
     setCurrentBgm(track);
     setIsPlaying(true);
     await conanAudio.playBgm(track, true);
@@ -66,6 +69,7 @@ export const ConanSoundtrackPlayer: React.FC<ConanSoundtrackPlayerProps> = ({
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isAdmin) return;
     const val = parseFloat(e.target.value);
     setVolume(val);
     conanAudio.setVolume(val);
@@ -86,23 +90,6 @@ export const ConanSoundtrackPlayer: React.FC<ConanSoundtrackPlayerProps> = ({
 
   return (
     <div className="fixed bottom-16 right-2 sm:bottom-4 sm:right-4 z-30 max-w-[280px] sm:max-w-sm">
-      {/* Speaking floating subtitle bubble */}
-      {speakerInfo.isSpeaking && (
-        <div className="mb-2 p-3 bg-red-950/95 backdrop-blur-md border border-red-500/50 rounded-2xl shadow-2xl text-xs animate-slide-up flex items-start gap-2.5">
-          <div className="p-1.5 bg-red-600 rounded-lg shrink-0 mt-0.5">
-            <Mic className="w-3.5 h-3.5 text-white animate-pulse" />
-          </div>
-          <div>
-            <div className="font-bold text-red-400 font-mono text-[10px] uppercase">
-              {speakerInfo.speaker} đang nói:
-            </div>
-            <p className="text-slate-100 text-[11px] leading-tight line-clamp-2 italic">
-              "{speakerInfo.text}"
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Docked Player */}
       <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-2.5 text-slate-100">
         <div className="flex items-center justify-between gap-3">
@@ -152,67 +139,75 @@ export const ConanSoundtrackPlayer: React.FC<ConanSoundtrackPlayerProps> = ({
         {/* Expanded Controls */}
         {isExpanded && (
           <div className="mt-3 pt-3 border-t border-slate-800 space-y-3 text-xs">
-            <div className="space-y-1.5">
-              <span className="text-[10px] text-slate-400 font-mono">CHỌN BẢN NHẠC MOVIE 29:</span>
-              <div className="grid grid-cols-3 gap-1">
-                <button
-                  onClick={() => handlePlayTrack('THEME')}
-                  className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                    currentBgm === 'THEME' && isPlaying && !isMuted
-                      ? 'bg-red-600 text-white shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                  }`}
-                >
-                  Theme Chính
-                </button>
-                <button
-                  onClick={() => handlePlayTrack('SUSPENSE')}
-                  className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                    currentBgm === 'SUSPENSE' && isPlaying && !isMuted
-                      ? 'bg-red-600 text-white shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                  }`}
-                >
-                  Hồi Hộp
-                </button>
-                <button
-                  onClick={() => handlePlayTrack('DEDUCTION')}
-                  className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                    currentBgm === 'DEDUCTION' && isPlaying && !isMuted
-                      ? 'bg-red-600 text-white shadow-md'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                  }`}
-                >
-                  Phá Án
-                </button>
-              </div>
-            </div>
+            {isAdmin ? (
+              <>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] text-amber-400 font-mono font-bold">⚡ CHỌN BẢN NHẠC ADMIN:</span>
+                  <div className="grid grid-cols-3 gap-1">
+                    <button
+                      onClick={() => handlePlayTrack('THEME')}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                        currentBgm === 'THEME' && isPlaying && !isMuted
+                          ? 'bg-red-600 text-white shadow-md'
+                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      Theme Chính
+                    </button>
+                    <button
+                      onClick={() => handlePlayTrack('SUSPENSE')}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                        currentBgm === 'SUSPENSE' && isPlaying && !isMuted
+                          ? 'bg-red-600 text-white shadow-md'
+                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      Hồi Hộp
+                    </button>
+                    <button
+                      onClick={() => handlePlayTrack('DEDUCTION')}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                        currentBgm === 'DEDUCTION' && isPlaying && !isMuted
+                          ? 'bg-red-600 text-white shadow-md'
+                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      Phá Án
+                    </button>
+                  </div>
+                </div>
 
-            <div>
-              <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                <span>Âm lượng nhạc</span>
-                <span className="font-mono font-bold text-slate-200">{Math.round(volume * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={volume}
-                onChange={handleVolumeChange}
-                className="w-full accent-red-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
-              />
-            </div>
+                <div>
+                  <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                    <span>Âm lượng nhạc</span>
+                    <span className="font-mono font-bold text-slate-200">{Math.round(volume * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                </div>
 
-            <div className="pt-2 border-t border-slate-800">
-              <button
-                onClick={onOpenMusicManager}
-                className="w-full py-2 bg-red-600/20 hover:bg-red-600 border border-red-500/40 text-red-400 hover:text-white rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5"
-              >
-                <Music className="w-3.5 h-3.5" />
-                <span>Tải Nhạc Của Bạn / Thay Nhạc Khác</span>
-              </button>
-            </div>
+                <div className="pt-2 border-t border-slate-800">
+                  <button
+                    onClick={onOpenMusicManager}
+                    className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <Music className="w-3.5 h-3.5" />
+                    <span>Tải Nhạc Của Bạn / Thay Nhạc Khác (Admin)</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-400 leading-relaxed text-center">
+                🔒 Quyền tùy chỉnh & đổi nhạc nền chỉ dành riêng cho tài khoản <strong className="text-amber-400">Admin</strong>.
+              </div>
+            )}
           </div>
         )}
       </div>

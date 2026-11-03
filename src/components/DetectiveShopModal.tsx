@@ -30,7 +30,9 @@ interface DetectiveShopModalProps {
   purchasedItemIds: string[];
   equippedItemsMap: Record<string, string[]>; // characterId -> itemIds
   selectedCharacter: DetectiveCharacter;
-  onBuyItem: (item: ShopItem) => void;
+  customItemPrices?: Record<string, number>;
+  customItemBonusValues?: Record<string, number>;
+  onBuyItem: (item: ShopItem, effectivePrice?: number) => void;
   onEquipItem: (characterId: string, itemId: string) => void;
   onUnequipItem: (characterId: string, itemId: string) => void;
 }
@@ -42,6 +44,8 @@ export const DetectiveShopModal: React.FC<DetectiveShopModalProps> = ({
   purchasedItemIds,
   equippedItemsMap,
   selectedCharacter,
+  customItemPrices = {},
+  customItemBonusValues = {},
   onBuyItem,
   onEquipItem,
   onUnequipItem,
@@ -198,7 +202,8 @@ export const DetectiveShopModal: React.FC<DetectiveShopModalProps> = ({
           {filteredItems.map(item => {
             const isPurchased = purchasedItemIds.includes(item.id);
             const isEquipped = activeCharEquippedIds.includes(item.id);
-            const canAfford = conanCoins >= item.price;
+            const effectivePrice = customItemPrices[item.id] ?? item.price;
+            const canAfford = conanCoins >= effectivePrice;
             const compatibleChar = DETECTIVE_CHARACTERS.find(c => c.id === item.compatibleCharacterId);
 
             return (
@@ -236,7 +241,7 @@ export const DetectiveShopModal: React.FC<DetectiveShopModalProps> = ({
                     {!isPurchased && (
                       <div className="text-right">
                         <span className="text-xs font-mono font-extrabold text-amber-400">
-                          🪙 {item.price} Xu
+                          🪙 {effectivePrice} Xu
                         </span>
                       </div>
                     )}
@@ -247,7 +252,11 @@ export const DetectiveShopModal: React.FC<DetectiveShopModalProps> = ({
                   </p>
 
                   <div className="p-2.5 bg-slate-950/90 rounded-xl border border-slate-800/80 text-xs text-amber-300/90 font-mono">
-                    ⚡ High-Tech Bonus: {item.bonusDescription}
+                    ⚡ High-Tech Bonus: {
+                      customItemBonusValues[item.id] !== undefined
+                        ? `+${customItemBonusValues[item.id]}s thời gian gỡ bom/giải đố (Chỉ số Admin set)`
+                        : item.bonusDescription
+                    }
                   </div>
                 </div>
 
@@ -286,7 +295,7 @@ export const DetectiveShopModal: React.FC<DetectiveShopModalProps> = ({
                     <button
                       onClick={() => {
                         if (canAfford) {
-                          onBuyItem(item);
+                          onBuyItem(item, effectivePrice);
                           conanAudio.playEpiphany();
                           conanVoice.speak('CONAN', `Đã mua ${item.name} thành công!`);
                         }
@@ -300,10 +309,10 @@ export const DetectiveShopModal: React.FC<DetectiveShopModalProps> = ({
                     >
                       {canAfford ? (
                         <>
-                          <span>Mua Bằng 🪙 {item.price} Xu</span>
+                          <span>Mua Bằng 🪙 {effectivePrice} Xu</span>
                         </>
                       ) : (
-                        <span>Thiếu {item.price - conanCoins} Xu Conan</span>
+                        <span>Thiếu {effectivePrice - conanCoins} Xu Conan</span>
                       )}
                     </button>
                   )}

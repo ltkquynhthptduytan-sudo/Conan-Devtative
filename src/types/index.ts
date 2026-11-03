@@ -161,3 +161,27 @@ export interface CaseData {
     options: { text: string; isCorrect: boolean; feedback: string }[];
   }[];
 }
+
+export interface UserProfile {
+  id: string;
+  username: string;
+  avatarUrl: string;
+  rankTitle: string;
+  joinedDate: string;
+  casesSolvedCount: number;
+  totalCoinsEarned: number;
+  isAdmin: boolean;
+}
+
+export interface CustomItemPrices {
+  shopItems: Record<string, number>; // itemId -> price
+  characters: Record<string, number>; // characterId -> price
+  itemBonusValues?: Record<string, number>; // itemId -> custom bonus time/value
+}
+
+export interface AdminMusicConfig {
+  defaultThemeUrl?: string;
+  customBgmTitle?: string;
+  bgmVolumeMultiplier: number;
+  unlockAllTracks?: boolean;
+}

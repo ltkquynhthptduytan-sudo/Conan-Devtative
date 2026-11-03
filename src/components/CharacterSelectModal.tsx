@@ -8,8 +8,9 @@ interface CharacterSelectModalProps {
   selectedCharacter: DetectiveCharacter;
   conanCoins: number;
   unlockedCharacterIds: string[];
+  customCharacterPrices?: Record<string, number>;
   onSelectCharacter: (char: DetectiveCharacter) => void;
-  onUnlockCharacter: (char: DetectiveCharacter) => void;
+  onUnlockCharacter: (char: DetectiveCharacter, effectivePrice?: number) => void;
   onClose: () => void;
 }
 
@@ -17,6 +18,7 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
   selectedCharacter,
   conanCoins,
   unlockedCharacterIds,
+  customCharacterPrices = {},
   onSelectCharacter,
   onUnlockCharacter,
   onClose,
@@ -60,8 +62,9 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-1">
           {DETECTIVE_CHARACTERS.map((char) => {
             const isSelected = selectedCharacter.id === char.id;
-            const isUnlocked = unlockedCharacterIds.includes(char.id) || char.price === 0;
-            const canAfford = conanCoins >= char.price;
+            const effectivePrice = customCharacterPrices[char.id] ?? char.price;
+            const isUnlocked = unlockedCharacterIds.includes(char.id) || effectivePrice === 0;
+            const canAfford = conanCoins >= effectivePrice;
 
             return (
               <div
@@ -91,7 +94,7 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                   ) : !isUnlocked ? (
                     <div className="px-2.5 py-0.5 bg-slate-950 border border-amber-500/40 text-amber-400 font-mono font-bold text-[10px] rounded-full flex items-center gap-1">
                       <Lock className="w-3 h-3 text-amber-400" />
-                      <span>{char.price} Xu</span>
+                      <span>{effectivePrice} Xu</span>
                     </div>
                   ) : null}
                 </div>
@@ -143,7 +146,7 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (canAfford) {
-                          onUnlockCharacter(char);
+                          onUnlockCharacter(char, effectivePrice);
                           conanAudio.playEpiphany();
                           conanVoice.speak('CONAN', `Chúc mừng! Bạn đã mở khóa thành công nhân vật ${char.name}!`);
                         } else {
@@ -159,7 +162,7 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                     >
                       <Coins className="w-3.5 h-3.5" />
                       <span>
-                        {canAfford ? `Mở Khóa (${char.price} Xu Conan)` : `Thiếu ${char.price - conanCoins} Xu (Cần ${char.price} Xu)`}
+                        {canAfford ? `Mở Khóa (${effectivePrice} Xu Conan)` : `Thiếu ${effectivePrice - conanCoins} Xu (Cần ${effectivePrice} Xu)`}
                       </span>
                     </button>
                   )}
