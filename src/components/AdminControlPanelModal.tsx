@@ -32,6 +32,9 @@ interface AdminControlPanelModalProps {
   onUpdateCoins: (newAmount: number) => void;
   onUpdateCustomPriceItem: (itemId: string, newPrice: number) => void;
   onUpdateCustomPriceCharacter: (charId: string, newPrice: number) => void;
+  onUpdateDefusalManualTimeLimit?: (timeSeconds: number) => void;
+  onUpdateGameMasterConfig?: (partial: Partial<CustomItemPrices>) => void;
+  onAdminMasterCheatAll?: () => void;
   onUnlockAllCharacters: () => void;
   onUnlockAllItems: () => void;
   onResetToDefaultPrices: () => void;
@@ -49,12 +52,15 @@ export const AdminControlPanelModal: React.FC<AdminControlPanelModalProps> = ({
   onUpdateCoins,
   onUpdateCustomPriceItem,
   onUpdateCustomPriceCharacter,
+  onUpdateDefusalManualTimeLimit,
+  onUpdateGameMasterConfig,
+  onAdminMasterCheatAll,
   onUnlockAllCharacters,
   onUnlockAllItems,
   onResetToDefaultPrices,
   onOpenMusicManager,
 }) => {
-  const [activeTab, setActiveTab] = useState<'ITEMS' | 'CHARACTERS' | 'COINS' | 'MUSIC'>('ITEMS');
+  const [activeTab, setActiveTab] = useState<'MASTER_CONFIG' | 'ITEMS' | 'CHARACTERS' | 'COINS' | 'MUSIC'>('MASTER_CONFIG');
   const [addCoinsInput, setAddCoinsInput] = useState<string>('1000');
   const [customAudioGain, setCustomAudioGain] = useState<number>(100);
   const [saveToast, setSaveToast] = useState<string>('');
@@ -119,6 +125,7 @@ export const AdminControlPanelModal: React.FC<AdminControlPanelModalProps> = ({
         {/* Tab Switcher */}
         <div className="flex items-center gap-2 p-3 bg-slate-950 border-b border-slate-800 overflow-x-auto scrollbar-none">
           {[
+            { key: 'MASTER_CONFIG', label: '🎮 Quản Trị Toàn Bộ Game', icon: Sliders },
             { key: 'ITEMS', label: '🛍️ Giá Vật Phẩm Shop', icon: ShoppingBag },
             { key: 'CHARACTERS', label: '🕵️‍♂️ Giá Nhân Vật (Kaito Kid)', icon: UserCheck },
             { key: 'COINS', label: '🪙 Thêm Xu & Cheat Fast Unlock', icon: Coins },
@@ -153,6 +160,177 @@ export const AdminControlPanelModal: React.FC<AdminControlPanelModalProps> = ({
 
         {/* Main Tab Content */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
+          {/* TAB 0: MASTER GAME CONTROL PANEL */}
+          {activeTab === 'MASTER_CONFIG' && (
+            <div className="space-y-5">
+              {/* Master 1-Click All Free & Max Easy Cheat */}
+              {onAdminMasterCheatAll && (
+                <div className="p-4 bg-gradient-to-r from-purple-950/80 via-amber-950/60 to-slate-950 border-2 border-amber-500/80 rounded-2xl space-y-3 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-amber-500/20 border border-amber-500/50 rounded-xl text-amber-400">
+                        <Flame className="w-6 h-6 animate-bounce" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black text-amber-300 uppercase tracking-widest">
+                          ⚡ LỆNH CHEAT ADMIN 1-CLICK: ĐẶT TOÀN BỘ GAME THÀNH EASY & MIỄN PHÍ
+                        </h3>
+                        <p className="text-[11px] text-slate-300">
+                          Set 0 Xu tất cả bảo bối + nhân vật, Max 999,999 Xu Conan, Vô hạn thời gian xem Sổ Hướng Dẫn, Gấp đôi thời gian gỡ bom, 99 lượt gợi ý!
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        onAdminMasterCheatAll();
+                        showToast('🔥 ĐÃ KÍCH HOẠT MASTER CHEAT: ĐẶT TOÀN BỘ GAME THÀNH MIỄN PHÍ & MAX EASY!');
+                      }}
+                      className="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-xl transition-all cursor-pointer whitespace-nowrap active:scale-95 uppercase tracking-wider border border-amber-300"
+                    >
+                      Kích Hoạt Master Cheat
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Game Time Limit Multiplier */}
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                      <Wrench className="w-4 h-4 text-emerald-400" />
+                      <span>Hệ Số Nhân Thời Gian Gỡ Bom (Game Time Multiplier)</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Nhân số giây đếm ngược tổng của vụ án (Ví dụ: x2.0 = Gấp đôi thời gian phá án gỡ bom).
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-emerald-950 border border-emerald-500 text-emerald-300 font-mono font-bold text-xs rounded-xl">
+                    x{customPrices.gameTimeMultiplier ?? 1.0}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 overflow-x-auto scrollbar-none">
+                  {[
+                    { label: 'x1.0 (Gốc)', val: 1.0 },
+                    { label: 'x1.5 (Tăng 50%)', val: 1.5 },
+                    { label: 'x2.0 (Gấp đôi)', val: 2.0 },
+                    { label: 'x3.0 (Gấp ba)', val: 3.0 },
+                  ].map(p => (
+                    <button
+                      key={p.val}
+                      onClick={() => {
+                        if (onUpdateGameMasterConfig) {
+                          onUpdateGameMasterConfig({ gameTimeMultiplier: p.val });
+                          conanAudio.playEpiphany();
+                          showToast(`Đã set hệ số thời gian gỡ bom thành ${p.label}!`);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer ${
+                        (customPrices.gameTimeMultiplier ?? 1.0) === p.val
+                          ? 'bg-emerald-600 text-white border-emerald-400 shadow-md'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Penalty Seconds Override */}
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                      <Wrench className="w-4 h-4 text-red-400" />
+                      <span>Số Giây Trừ Phạt Khi Cắt Sai / Nhập Sai Mật Mã</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Điều chỉnh số giây bị trừ phạt khi nhập sai mật mã hoặc cắt nhầm dây ngắt mạch.
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-red-950 border border-red-500 text-red-300 font-mono font-bold text-xs rounded-xl">
+                    -{customPrices.penaltyTimeOverride ?? 5}s
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 overflow-x-auto scrollbar-none">
+                  {[
+                    { label: '3s (Nhẹ)', val: 3 },
+                    { label: '5s (Mặc định gốc)', val: 5 },
+                    { label: '10s (Nặng)', val: 10 },
+                    { label: '15s (Cực nặng)', val: 15 },
+                  ].map(p => (
+                    <button
+                      key={p.val}
+                      onClick={() => {
+                        if (onUpdateGameMasterConfig) {
+                          onUpdateGameMasterConfig({ penaltyTimeOverride: p.val });
+                          conanAudio.playEpiphany();
+                          showToast(`Đã set phạt cắt sai thành -${p.val}s!`);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer ${
+                        (customPrices.penaltyTimeOverride ?? 5) === p.val
+                          ? 'bg-red-600 text-white border-red-400 shadow-md'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Max Hints Override */}
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span>Số Lượt Gợi Ý Tối Đa Cho Mỗi Vụ Án</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Cấu hình số lần được sử dụng gợi ý thám tử từ Conan và Tiến sĩ Agasa.
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-amber-950 border border-amber-500 text-amber-300 font-mono font-bold text-xs rounded-xl">
+                    {(customPrices.maxHintsOverride ?? 3) === 99 ? 'Vô Hạn (99)' : `${customPrices.maxHintsOverride ?? 3} Lượt`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 overflow-x-auto scrollbar-none">
+                  {[
+                    { label: '3 Lượt (Gốc)', val: 3 },
+                    { label: '5 Lượt', val: 5 },
+                    { label: '10 Lượt', val: 10 },
+                    { label: 'Vô Hạn (99 Lượt)', val: 99 },
+                  ].map(p => (
+                    <button
+                      key={p.val}
+                      onClick={() => {
+                        if (onUpdateGameMasterConfig) {
+                          onUpdateGameMasterConfig({ maxHintsOverride: p.val });
+                          conanAudio.playEpiphany();
+                          showToast(`Đã set số lượt gợi ý thành ${p.label}!`);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer ${
+                        (customPrices.maxHintsOverride ?? 3) === p.val
+                          ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB 1: SHOP ITEM PRICES */}
           {activeTab === 'ITEMS' && (
             <div className="space-y-4">
@@ -175,6 +353,70 @@ export const AdminControlPanelModal: React.FC<AdminControlPanelModalProps> = ({
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Reset Gốc
                 </button>
+              </div>
+
+              {/* Bomb Defusal Manual View Time Setting */}
+              <div className="p-4 bg-slate-950 border-2 border-amber-500/60 rounded-2xl space-y-3 shadow-lg">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-black text-amber-300 uppercase tracking-wide flex items-center gap-2">
+                      <Wrench className="w-4 h-4 text-amber-400" />
+                      <span>📖 THỜI GIAN ĐƯỢC XEM SỔ HƯỚNG DẪN GỠ BOM C4</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">
+                      Tùy chỉnh số giây tự động đếm ngược khép Sổ Hướng Dẫn lại khi gỡ bom (Cần ghi nhớ trước khi tự đóng).
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={customPrices.defusalManualTimeLimit ?? 10}
+                      onChange={(e) => {
+                        const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                        if (onUpdateDefusalManualTimeLimit) {
+                          onUpdateDefusalManualTimeLimit(val);
+                        }
+                      }}
+                      className="w-20 bg-slate-900 border border-amber-500/60 text-amber-300 font-mono font-bold text-xs rounded-xl p-2 text-center focus:outline-none focus:border-amber-400"
+                    />
+                    <span className="text-xs text-slate-300 font-bold font-mono">
+                      {(customPrices.defusalManualTimeLimit ?? 10) === 0 ? 'Giây (Vô Hạn)' : 'Giây'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 overflow-x-auto scrollbar-none">
+                  <span className="text-[10px] text-slate-400 font-mono shrink-0">Chọn nhanh:</span>
+                  {[
+                    { label: '3s (Siêu Khó)', val: 3 },
+                    { label: '5s (Khó)', val: 5 },
+                    { label: '10s (Gốc)', val: 10 },
+                    { label: '15s (Thong thả)', val: 15 },
+                    { label: '30s (Dễ)', val: 30 },
+                    { label: 'Vô Hạn (0s)', val: 0 },
+                  ].map(preset => (
+                    <button
+                      key={preset.val}
+                      onClick={() => {
+                        if (onUpdateDefusalManualTimeLimit) {
+                          onUpdateDefusalManualTimeLimit(preset.val);
+                          conanAudio.playEpiphany();
+                          showToast(`Đã chỉnh thời gian xem Sổ Hướng Dẫn thành ${preset.label}!`);
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold border transition-all cursor-pointer shrink-0 ${
+                        (customPrices.defusalManualTimeLimit ?? 10) === preset.val
+                          ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-bold'
+                          : 'bg-slate-900 text-slate-300 border-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

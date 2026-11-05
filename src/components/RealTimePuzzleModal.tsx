@@ -11,6 +11,9 @@ interface RealTimePuzzleModalProps {
   difficulty?: DifficultyLevel;
   selectedCharacter?: DetectiveCharacter;
   equippedItemsBonusTime?: number;
+  manualViewTimeSeconds?: number;
+  gameTimeMultiplier?: number;
+  penaltyTimeOverride?: number;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -60,14 +63,18 @@ export const RealTimePuzzleModal: React.FC<RealTimePuzzleModalProps> = ({
   difficulty = 'EASY',
   selectedCharacter = DETECTIVE_CHARACTERS[0],
   equippedItemsBonusTime = 0,
+  manualViewTimeSeconds = 10,
+  gameTimeMultiplier = 1.0,
+  penaltyTimeOverride,
   onSuccess,
   onClose,
 }) => {
-  // Apply character bonus extra time + shop equipment bonus time
+  // Apply character bonus extra time + shop equipment bonus time + Admin Time Multiplier
   const characterTimeBonus = selectedCharacter?.extraTimeSeconds || 0;
-  const initialTime = Math.round((difficulty === 'HARD'
+  const baseTime = (difficulty === 'HARD'
     ? (puzzleData?.hardTimeLimitSeconds || 40)
-    : (puzzleData?.timeLimitSeconds || 60)) + characterTimeBonus + equippedItemsBonusTime);
+    : (puzzleData?.timeLimitSeconds || 60));
+  const initialTime = Math.round((baseTime * gameTimeMultiplier) + characterTimeBonus + equippedItemsBonusTime);
 
   const maxManualViews = selectedCharacter?.maxManualViews ?? 1;
 
@@ -82,6 +89,29 @@ export const RealTimePuzzleModal: React.FC<RealTimePuzzleModalProps> = ({
   const [isFailed, setIsFailed] = useState<boolean>(false);
   const [showHint, setShowHint] = useState<boolean>(false);
   const [showDefusalManual, setShowDefusalManual] = useState<boolean>(false);
+  const [manualTimerLeft, setManualTimerLeft] = useState<number>(manualViewTimeSeconds);
+
+  // Auto-close countdown timer for Bomb Defusal Manual
+  useEffect(() => {
+    if (!showDefusalManual || manualViewTimeSeconds <= 0) return;
+
+    setManualTimerLeft(manualViewTimeSeconds);
+
+    const manualTimer = setInterval(() => {
+      setManualTimerLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(manualTimer);
+          setShowDefusalManual(false);
+          conanAudio.playDramaticShock();
+          setErrorMsg(`⏰ Hết thời gian (${manualViewTimeSeconds}s) xem Sổ Hướng Dẫn Gỡ Bom! Hãy dùng trí nhớ để cắt dây!`);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(manualTimer);
+  }, [showDefusalManual, manualViewTimeSeconds]);
 
   const puzzleType = puzzleData?.type || 'CIPHER';
   
@@ -98,7 +128,9 @@ export const RealTimePuzzleModal: React.FC<RealTimePuzzleModalProps> = ({
   }, [puzzleType, randomWireSequence, puzzleData?.solution]);
 
   const cipherSolution = puzzleData ? String(puzzleData.solution).toUpperCase() : '2015';
-  const penalty = difficulty === 'HARD' ? Math.max(puzzleData?.penaltySeconds || 5, 8) : (puzzleData?.penaltySeconds || 5);
+  const penalty = penaltyTimeOverride !== undefined
+    ? penaltyTimeOverride
+    : (difficulty === 'HARD' ? Math.max(puzzleData?.penaltySeconds || 5, 8) : (puzzleData?.penaltySeconds || 5));
 
   const title = puzzleData?.title || 'Giải Mã Khẩn Cấp Thời Gian Thực';
   const description = puzzleData?.description || 'Hệ thống đếm ngược đang kích hoạt. Hãy nhanh chóng tìm lời giải!';
@@ -559,18 +591,31 @@ export const RealTimePuzzleModal: React.FC<RealTimePuzzleModalProps> = ({
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3 border-b border-amber-500/30 pb-3">
-              <div className="p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400 shrink-0">
-                <BookOpen className="w-6 h-6" />
+            <div className="flex items-center justify-between border-b border-amber-500/30 pb-3 pr-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400 shrink-0">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-amber-300 uppercase tracking-wide">
+                    📖 SỔ HƯỚNG DẪN GỠ BOM C4
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    Tài liệu quy tắc tháo gỡ vật nổ sở cảnh sát Tokyo
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xs font-black text-amber-300 uppercase tracking-wide">
-                  📖 SỔ HƯỚNG DẪN GỠ BOM C4 (BẢN TỰ ĐỘNG RANDOM)
-                </h3>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  Tài liệu quy tắc tháo gỡ vật nổ sở cảnh sát Tokyo
-                </p>
-              </div>
+
+              {manualViewTimeSeconds > 0 ? (
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-red-950/80 border border-red-500/60 rounded-xl text-red-300 font-mono font-bold text-xs animate-pulse shrink-0">
+                  <Timer className="w-3.5 h-3.5 text-red-400" />
+                  <span>{manualTimerLeft}s</span>
+                </div>
+              ) : (
+                <div className="px-2.5 py-0.5 bg-emerald-950 border border-emerald-500/50 text-emerald-300 font-mono text-[10px] rounded-lg shrink-0">
+                  Vô hạn thời gian
+                </div>
+              )}
             </div>
 
             <div className="space-y-3 text-xs leading-relaxed">

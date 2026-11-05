@@ -111,8 +111,63 @@ export default function App() {
     });
   };
 
+  const handleUpdateDefusalManualTimeLimit = (timeSeconds: number) => {
+    setCustomPrices(prev => {
+      const next = {
+        ...prev,
+        defusalManualTimeLimit: timeSeconds,
+      };
+      localStorage.setItem('custom_item_prices', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleUpdateGameMasterConfig = (partialConfig: Partial<CustomItemPrices>) => {
+    setCustomPrices(prev => {
+      const next = { ...prev, ...partialConfig };
+      localStorage.setItem('custom_item_prices', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleAdminMasterCheatAll = () => {
+    // 1. Free all shop items
+    const freeShopItems: Record<string, number> = {};
+    SHOP_ITEMS.forEach(item => { freeShopItems[item.id] = 0; });
+
+    // 2. Free all characters
+    const freeCharacters: Record<string, number> = {};
+    DETECTIVE_CHARACTERS.forEach(char => { freeCharacters[char.id] = 0; });
+
+    // 3. Unlock all characters & items
+    const allCharIds = DETECTIVE_CHARACTERS.map(c => c.id);
+    const allItemIds = SHOP_ITEMS.map(i => i.id);
+    setUnlockedCharacterIds(allCharIds);
+    setPurchasedItemIds(allItemIds);
+    localStorage.setItem('unlocked_characters', JSON.stringify(allCharIds));
+    localStorage.setItem('purchased_items', JSON.stringify(allItemIds));
+
+    // 4. Max coins 999,999
+    setConanCoins(999999);
+    localStorage.setItem('conan_coins', '999999');
+
+    // 5. Update custom prices & configs
+    const masterPrices: CustomItemPrices = {
+      shopItems: freeShopItems,
+      characters: freeCharacters,
+      itemBonusValues: customPrices.itemBonusValues,
+      defusalManualTimeLimit: 0, // Unlimited
+      gameTimeMultiplier: 2.0,
+      maxHintsOverride: 99,
+      penaltyTimeOverride: 3,
+    };
+    setCustomPrices(masterPrices);
+    localStorage.setItem('custom_item_prices', JSON.stringify(masterPrices));
+    conanAudio.playEpiphany();
+  };
+
   const handleResetToDefaultPrices = () => {
-    const emptyPrices = { shopItems: {}, characters: {}, itemBonusValues: {} };
+    const emptyPrices = { shopItems: {}, characters: {}, itemBonusValues: {}, defusalManualTimeLimit: 10, gameTimeMultiplier: 1.0, maxHintsOverride: 3, penaltyTimeOverride: undefined };
     setCustomPrices(emptyPrices);
     localStorage.setItem('custom_item_prices', JSON.stringify(emptyPrices));
   };
@@ -593,6 +648,9 @@ export default function App() {
           difficulty={difficulty}
           selectedCharacter={activePlayingCharacter}
           equippedItemsBonusTime={equippedItemsBonusTime}
+          manualViewTimeSeconds={customPrices.defusalManualTimeLimit ?? 10}
+          gameTimeMultiplier={customPrices.gameTimeMultiplier ?? 1.0}
+          penaltyTimeOverride={customPrices.penaltyTimeOverride}
           onSuccess={handlePuzzleSuccess}
           onClose={() => setIsPuzzleOpen(false)}
         />
@@ -662,6 +720,9 @@ export default function App() {
         }}
         onUpdateCustomPriceItem={handleUpdateCustomPriceItem}
         onUpdateCustomPriceCharacter={handleUpdateCustomPriceCharacter}
+        onUpdateDefusalManualTimeLimit={handleUpdateDefusalManualTimeLimit}
+        onUpdateGameMasterConfig={handleUpdateGameMasterConfig}
+        onAdminMasterCheatAll={handleAdminMasterCheatAll}
         onUnlockAllCharacters={handleUnlockAllCharacters}
         onUnlockAllItems={handleUnlockAllItems}
         onResetToDefaultPrices={handleResetToDefaultPrices}
@@ -685,6 +746,9 @@ export default function App() {
         onUpdateCustomPriceItem={handleUpdateCustomPriceItem}
         onUpdateCustomPriceCharacter={handleUpdateCustomPriceCharacter}
         onUpdateCustomItemBonusValue={handleUpdateCustomItemBonusValue}
+        onUpdateDefusalManualTimeLimit={handleUpdateDefusalManualTimeLimit}
+        onUpdateGameMasterConfig={handleUpdateGameMasterConfig}
+        onAdminMasterCheatAll={handleAdminMasterCheatAll}
         onUnlockAllCharacters={handleUnlockAllCharacters}
         onUnlockAllItems={handleUnlockAllItems}
         onResetToDefaultPrices={handleResetToDefaultPrices}

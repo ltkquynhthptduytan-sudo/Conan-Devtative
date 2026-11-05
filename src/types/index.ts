@@ -177,6 +177,10 @@ export interface CustomItemPrices {
   shopItems: Record<string, number>; // itemId -> price
   characters: Record<string, number>; // characterId -> price
   itemBonusValues?: Record<string, number>; // itemId -> custom bonus time/value
+  defusalManualTimeLimit?: number; // Time allowed to view bomb defusal manual in seconds (0 = unlimited)
+  gameTimeMultiplier?: number; // Multiplier for defusal countdown (e.g. 1.0, 1.5, 2.0, 3.0)
+  maxHintsOverride?: number; // Custom max hints count (e.g. 3, 5, 10, 99)
+  penaltyTimeOverride?: number; // Custom penalty time per wrong attempt (e.g. 3s, 5s, 10s)
 }
 
 export interface AdminMusicConfig {
